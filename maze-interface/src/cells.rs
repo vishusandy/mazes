@@ -1,107 +1,3 @@
-struct Location(u8);
-impl Location {
-    const BOTTOM: u8 = 1;
-    const LEFT: u8 = 2;
-    const RIGHT: u8 = 4;
-    const TOP: u8 = 8;
-    fn is_bottom(&self) -> bool {
-        self.0 & Self::BOTTOM != 0
-    }
-    fn is_left(&self) -> bool {
-        self.0 & Self::LEFT != 0
-    }
-    fn is_right(&self) -> bool {
-        self.0 & Self::RIGHT != 0
-    }
-    fn is_top(&self) -> bool {
-        self.0 & Self::TOP != 0
-    }
-}
-
-/// Indicate if the cell is located on a border, and if so which.
-enum CellLocation {
-    Top,
-    Bottom,
-    Left,
-    Right,
-    Middle,
-}
-impl CellLocation {
-    /// Check if the cell can have a specified border removed.
-    /// If the cell is the top cell, you obviously cannot remove
-    /// the top border, etc.
-    fn remove_side_check(&self, side: Sides) -> bool {
-        match side {
-            Sides::N => !self.top(),
-            Sides::W => !self.left(),
-            Sides::S => !self.bottom(),
-            Sides::E => !self.right(),
-        }
-    }
-    /// Check if it is on the bottom row.
-    fn bottom(&self) -> bool {
-        match self {
-            CellLocation::Bottom => true,
-            CellLocation::Left => false,
-            CellLocation::Right => false,
-            CellLocation::Top => false,
-            _ => false,
-        }
-    }
-    /// Check if it is on the leftmost column.
-    fn left(&self) -> bool {
-        match self {
-            CellLocation::Bottom => false,
-            CellLocation::Left => true,
-            CellLocation::Right => false,
-            CellLocation::Top => false,
-            _ => false,
-        }
-    }
-    /// Check if it is on the rightmost column.
-    fn right(&self) -> bool {
-        match self {
-            CellLocation::Bottom => false,
-            CellLocation::Left => false,
-            CellLocation::Right => true,
-            CellLocation::Top => false,
-            _ => false,
-        }
-    }
-    /// Check if it is on the top row.
-    fn top(&self) -> bool {
-        match self {
-            CellLocation::Bottom => false,
-            CellLocation::Left => false,
-            CellLocation::Right => false,
-            CellLocation::Top => true,
-            _ => false,
-        }
-    }
-}
-
-struct MazeCell {
-    location: CellLocation,
-    state: CellState,
-}
-
-struct CellState {
-    left: bool,
-    right: bool,
-    top: bool,
-    bottom: bool,
-}
-impl CellState {
-    fn check(&self, side: Sides) -> bool {
-        match side {
-            Sides::N => self.top,
-            Sides::W => self.left,
-            Sides::S => self.bottom,
-            Sides::E => self.right,
-        }
-    }
-}
-
 enum Sides {
     N,
     W,
@@ -109,6 +5,79 @@ enum Sides {
     E,
 }
 
+struct MazeCell(u8);
+
 impl MazeCell {
+    const BOTTOM_BORDER: u8 = 1;
+    const LEFT_BORDER: u8 = 2;
+    const RIGHT_BORDER: u8 = 4;
+    const TOP_BORDER: u8 = 8;
+    fn on_bottom(&self) -> bool {
+        self.0 & Self::BOTTOM_BORDER != 0
+    }
+    fn on_left(&self) -> bool {
+        self.0 & Self::LEFT_BORDER != 0
+    }
+    fn on_right(&self) -> bool {
+        self.0 & Self::RIGHT_BORDER != 0
+    }
+    fn on_top(&self) -> bool {
+        self.0 & Self::TOP_BORDER != 0
+    }
+    const BOTTOM_EDGE: u8 = 16; // 32 64 128
+    const LEFT_EDGE: u8 = 32;
+    const RIGHT_EDGE: u8 = 64;
+    const TOP_EDGE: u8 = 128;
+    fn has_bottom_edge(&self) -> bool {
+        self.0 & Self::BOTTOM_EDGE != 0
+    }
+    fn has_left_edge(&self) -> bool {
+        self.0 & Self::LEFT_EDGE != 0
+    }
+    fn has_right_edge(&self) -> bool {
+        self.0 & Self::RIGHT_EDGE != 0
+    }
+    fn has_top_edge(&self) -> bool {
+        self.0 & Self::TOP_EDGE != 0
+    }
+
+    fn can_remove_edge(&self, side: Sides) -> bool {
+        match side {
+            Sides::N => false,
+            Sides::W => false,
+            Sides::S => false,
+            Sides::E => false,
+        }
+    }
+}
+
+/// MazeGrid is primarily a Vector of MazeCells.  There are two good ways to
+/// organize the cells in the vector.
+///
+/// 1. The layout is unoptimized, and every cell has a North, East, West, South
+/// border.  This means that cells sharing a border will have to ensure the
+/// neighboring border is changed to be the same, so if the top right cell has
+/// its eastern border removed, the second cell in the top row must also have
+/// its western border removed.  An alternative would to be to just ignore all
+/// Western and Northern borders and rely on the neighbors below and/or east of
+/// the current cell for shared border data.  Both approaches have an
+/// inefficient memory layout.
+///
+/// 2. The cell grid would use an optimized layout so that every other cell is
+/// empty, such that the zero index would be a MazeCell, but the second index
+/// would merely refer to the MazeCell next to it (the one before hand for the
+/// left, or the one next to it for the right).  The cells would be split into
+/// rows; if the dimensions are 8x8 then the first 4 cells would represent the
+/// 0, 2, 4, & 8th indicies on the top, the next 4 cells would be the 1, 3, 5,
+/// 7th indicies of the second row, the next 4 cells would be the 0, 2, 4, 8th
+/// indicies on the third row, the next 4 cells would be the 1, 3, 5, 7th
+/// indicies on the fourth row, and this pattern will continue until the last
+/// row is filled.
+struct MazeGrid {
+    width: u8,
+    cells: Vec<MazeCell>,
+}
+
+impl MazeGrid {
     fn carve(&mut self, side: Sides) {}
 }

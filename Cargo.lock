@@ -1,0 +1,8 @@
+[[package]]
+name = "maze-algos"
+version = "0.1.0"
+
+[[package]]
+name = "maze-interface"
+version = "0.1.0"
+
