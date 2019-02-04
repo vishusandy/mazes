@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "maze-interface",
+    "maze-algos"
+]
