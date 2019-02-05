@@ -53,7 +53,14 @@ impl MazeGrid {
     /// carve() removes a wall from a given side of a cell and returns true if
     /// changes were made, or false if no changes were made.
     fn carve(&mut self, cell: &Point, side: &Edge) -> bool {
-        false
+        let loc = Location {
+            side: (*side).clone(),
+            point: cell.clone(),
+        };
+        let v_loc = self.locate(&loc);
+        let FlatLocation { side, idx } = v_loc;
+        let cell = &mut self.cells[idx as usize];
+        cell.remove_edge(&side)
     }
 
     /// The locate() method is used to translate regular grid coordinates into
@@ -65,85 +72,147 @@ impl MazeGrid {
     ///
     /// locate() takes a MazeGrid (self), and a Location and determines and
     /// returns the cell and new edge that stores the data for that edge.
-    fn locate(&self, loc: &Location) -> Option<FlatLocation> {
+    fn locate(&self, loc: &Location) -> FlatLocation {
         // destructure the Point in cell into col and row variables
         let Location { side, point: cell } = loc;
         let row = cell.y();
         let col = cell.x();
+        // multiply length by the row number and add the column number to
+        // get the actual index in an inefficient grid implementation.
+        // this is divided by 2 to get the efficient implementation index,
+        // which may be a whole integer number or may have a .5 remainder
+        // (which indicates it does not refer to )
         let full_index = (row as u16) * (self.length as u16) + (col as u16);
 
         let v_div = (full_index as f32) / 2f32;
         let v_side: Edge;
         let v_idx: u16;
-        if v_div != v_div.ceil() {
+        if v_div != v_div.trunc() {
+            let v_len = self.length as u16 / 2u16;
             match side {
                 Edge::N => {
                     if cell.on_top_border(self.length) {
-                        return None;
+                        // floor() v_idx here because the northern border of the grid
+                        // starts at an even v_idx, meaning if it were ceil()ed the cell
+                        // could potentially reference the next row.
+                        v_idx = v_div.floor() as u16;
+                        v_side = Edge::N;
                     } else {
-                        v_idx = (v_div.floor() as u16) - (self.length as u16 / 2u16);
+                        // floor() to get previous cell in vector and remove a row
+                        v_idx = (v_div.floor() as u16) - v_len;
                         v_side = Edge::S;
                     }
                 }
                 Edge::E => {
                     if cell.on_right_border(self.length) {
-                        return None;
+                        // here v_idx will never go over the length of the cells vector
+                        // as it is floored and then one row is added (since the item is
+                        // on the east border the vector must have at least one more row).
+                        v_idx = v_div.floor() as u16 + v_len;
+                        v_side = Edge::E;
                     } else {
+                        // ceil() to get next cell in vector
                         v_idx = v_div.ceil() as u16;
                         v_side = Edge::W;
                     }
                 }
                 Edge::S => {
                     if cell.on_bottom_border(self.length) {
-                        return None;
+                        // ceil() v_idx here because the southern border of the grid
+                        // has a v_idx with a remainder of .5, meaning if it were floor()ed
+                        // the cell could potentially reference a previous row.
+                        v_idx = v_div.ceil() as u16;
+                        v_side = Edge::S;
                     } else {
-                        v_idx = (v_div.ceil() as u16) + (self.length as u16 / 2u16);
+                        // ceil() to get next cell in the vector and add a row
+                        v_idx = (v_div.ceil() as u16) + v_len;
                         v_side = Edge::N;
                     }
                 }
                 Edge::W => {
                     if cell.on_left_border(self.length) {
-                        return None;
+                        // here v_idx will never go over the length of the cells vector
+                        // as it is ceiled and then one row subtracted (since the item is
+                        // on the west border the vector must have at least one previous row).
+                        v_idx = v_div.ceil() as u16 - v_len;
+                        v_side = Edge::W;
                     } else {
+                        // floor() to get previous cell in the vector
                         v_idx = v_div.floor() as u16;
                         v_side = Edge::E;
                     }
                 }
             }
-            Some(FlatLocation::new(v_idx, v_side))
+            FlatLocation::new(v_idx, v_side)
         } else {
             // index is even, so no change
-            Some(FlatLocation::new(v_div as u16, side.clone()))
+            FlatLocation::new(v_div as u16, side.clone())
         }
     }
 }
 
-impl std::ops::Index<Location> for MazeGrid {
-    type Output = MazeCell;
-
-    fn index(&self, loc: Location) -> &MazeCell {
-        unimplemented!() // TODO
-    }
-}
-
-impl std::ops::IndexMut<Location> for MazeGrid {
-    fn index_mut<'a>(&'a mut self, loc: Location) -> &'a mut MazeCell {
-        unimplemented!() // TODO
-    }
-}
-
+/// This operation will only return a reference to the cell containing
+/// the data for the side in question, it will NOT tell you which side
+/// of that reference you should use.  For this reason you should be
+/// careful when using this method.  Use MazeGrid.locate() to get the
+/// index and correct side.
 impl std::ops::Index<&Location> for MazeGrid {
     type Output = MazeCell;
 
+    /// This method will only return a reference to the cell containing
+    /// the data for the side in question, it will NOT tell you which side
+    /// of that reference you should use.  For this reason you should be
+    /// careful when using this method.  Use MazeGrid.locate() to get the
+    /// index and correct side.
     fn index(&self, loc: &Location) -> &MazeCell {
-        unimplemented!() // TODO
-                         // let v_loc = self.locate(loc);
-                         // &self.cells[v_loc.idx]
+        // unimplemented!() // TODO
+        let v_loc = self.locate(loc);
+        &self.cells[v_loc.idx as usize]
     }
 }
 
+/// This operation will only return a reference to the cell containing
+/// the data for the side in question, it will NOT tell you which side
+/// of that reference you should use.  For this reason you should be
+/// careful when using this method.  Use MazeGrid.locate() to get the
+/// index and correct side.
 impl std::ops::IndexMut<&Location> for MazeGrid {
+    /// This method will only return a reference to the cell containing
+    /// the data for the side in question, it will NOT tell you which side
+    /// of that reference you should use.  For this reason you should be
+    /// careful when using this method.  Use MazeGrid.locate() to get the
+    /// index and correct side.
     fn index_mut<'a>(&'a mut self, loc: &Location) -> &'a mut MazeCell {
         unimplemented!() // TODO
     }
 }
+
+// The code below is left commented out to document why this is not and should
+// not be implemented.
+//
+//
+// Do not implement Index operations for MazeGrid[Location] as the Location
+// will be destroyed and the caller would not be able to call grid.locate() to
+// determine the correct side and would be left with only the cell index.
+//
+// If an Index operation is needed use MazeGrid[&Location] instead.
+//
+// impl std::ops::Index<Location> for MazeGrid {
+//     type Output = MazeCell;
+//
+//     fn index(&self, loc: Location) -> &MazeCell {
+//         unimplemented!() // DO NOT IMPLEMENT.  THIS IS LEFT UNIMPLEMENTED INTENTIONALLY
+//     }
+// }
+//
+// Do not implement Index operations for MazeGrid[Location] as the Location
+// will be destroyed and the caller would not be able to call grid.locate() to
+// determine the correct side and would be left with only the cell index.
+//
+// If an Index operation is needed use MazeGrid[&Location] instead.
+//
+// impl std::ops::IndexMut<Location> for MazeGrid {
+//     fn index_mut<'a>(&'a mut self, loc: Location) -> &'a mut MazeCell {
+//         unimplemented!() // DO NOT IMPLEMENT.  THIS IS LEFT UNIMPLEMENTED INTENTIONALLY
+//     }
+// }

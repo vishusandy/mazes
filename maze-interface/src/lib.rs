@@ -86,13 +86,13 @@ impl std::str::FromStr for Edge {
 }
 
 impl std::convert::From<EdgeFromStrError> for LocationFromStrError {
-    fn from(err: EdgeFromStrError) -> Self {
+    fn from(_err: EdgeFromStrError) -> Self {
         LocationFromStrError
     }
 }
 
 impl std::convert::From<std::num::ParseIntError> for LocationFromStrError {
-    fn from(err: std::num::ParseIntError) -> Self {
+    fn from(_err: std::num::ParseIntError) -> Self {
         LocationFromStrError
     }
 }

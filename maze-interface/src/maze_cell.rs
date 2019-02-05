@@ -10,26 +10,42 @@ pub struct MazeCell(u8);
 impl MazeCell {
     // Border state constants
     /// Value indicating the cell is on the bottom border
-    const BOTTOM_BORDER: u8 = 1;
+    pub const BOTTOM_BORDER: u8 = 1;
     /// Value indicating the cell is on the left border
-    const LEFT_BORDER: u8 = 2;
+    pub const LEFT_BORDER: u8 = 2;
     /// Value indicating the cell is on the right border
-    const RIGHT_BORDER: u8 = 4;
+    pub const RIGHT_BORDER: u8 = 4;
     /// Value indicating the cell is on the top border
-    const TOP_BORDER: u8 = 8;
+    pub const TOP_BORDER: u8 = 8;
 
     /// Value indicating the cell has the bottom edge visible
-    const BOTTOM_EDGE: u8 = 16;
+    pub const BOTTOM_EDGE: u8 = 16;
     /// Value indicating the cell has the left edge visible
-    const LEFT_EDGE: u8 = 32;
+    pub const LEFT_EDGE: u8 = 32;
     /// Value indicating the cell has the right edge visible
-    const RIGHT_EDGE: u8 = 64;
+    pub const RIGHT_EDGE: u8 = 64;
     /// Value indicating the cell has the top edge visible
-    const TOP_EDGE: u8 = 128;
+    pub const TOP_EDGE: u8 = 128;
+
+    const ALL_EDGES: u8 = Self::BOTTOM_EDGE + Self::LEFT_EDGE + Self::RIGHT_EDGE + Self::TOP_EDGE;
 
     /// Creates a new MazeCell with the given positions, assuming a given grid size.
     /// The grid size is used to correctly check if the cell is on a border.
+    ///
+    /// Only the borders the cell is touching are saved in the cell, the edges will
+    /// be all on by default.  To create a new cell without all of the edges use the
+    /// blank() function instead of new()
     pub fn new(grid_size: u8, pos: &Point) -> Self {
+        Self(
+            (pos.on_bottom_border(grid_size) as u8 * Self::BOTTOM_BORDER)
+                + (pos.on_top_border(grid_size) as u8 * Self::TOP_BORDER)
+                + (pos.on_left_border(grid_size) as u8 * Self::LEFT_BORDER)
+                + (pos.on_right_border(grid_size) as u8 * Self::RIGHT_BORDER)
+                + Self::ALL_EDGES,
+        )
+    }
+
+    pub fn blank(grid_size: u8, pos: &Point) -> Self {
         Self(
             (pos.on_bottom_border(grid_size) as u8 * Self::BOTTOM_BORDER)
                 + (pos.on_top_border(grid_size) as u8 * Self::TOP_BORDER)
