@@ -1,6 +1,6 @@
-use crate::cells::maze_cell::MazeCell;
-use crate::cells::points::Point;
-use crate::cells::{Edge, FlatLocation, Location};
+use crate::maze_cell::MazeCell;
+use crate::points::Point;
+use crate::{Edge, FlatLocation, Location};
 
 /// MazeGrid is primarily a Vector of MazeCells.  There are two good ways to
 /// organize the cells in the vector.
@@ -65,11 +65,9 @@ impl MazeGrid {
     ///
     /// locate() takes a MazeGrid (self), and a Location and determines and
     /// returns the cell and new edge that stores the data for that edge.
-    // fn locate(&self, cell: &Point, side: &Edge) -> Location {
     fn locate(&self, loc: &Location) -> Option<FlatLocation> {
-        let Location { side, point: cell } = loc;
         // destructure the Point in cell into col and row variables
-
+        let Location { side, point: cell } = loc;
         let row = cell.y();
         let col = cell.x();
         let full_index = (row as u16) * (self.length as u16) + (col as u16);
@@ -117,72 +115,35 @@ impl MazeGrid {
             // index is even, so no change
             Some(FlatLocation::new(v_div as u16, side.clone()))
         }
-
-        /*
-        let adjusted_cell = match side {
-            // does the negative point numbers work out with borders correctly?
-            Edge::N => {
-                if cell.y() != 0 {
-                    Point::new(0, 0)
-                } else {
-                    Point::new(0, 0)
-                }
-            }
-            Edge::W => {
-                if cell.x() != 0 {
-                    Point::new(0, 0)
-                } else {
-                    Point::new(0, 0)
-                }
-            }
-            Edge::S => {
-                if cell.x() < self.length as i16 {
-                    Point::new(0, 0)
-                } else {
-                    Point::new(0, 0)
-                }
-            }
-            Edge::E => {
-                if cell.y() < self.length as i16 {
-                    Point::new(0, 0)
-                } else {
-                    Point::new(0, 0)
-                }
-            }
-        };
-        // let Point { x: col, y: row } = adjusted_cell;
-        let (x, y) = adjusted_cell.get();
-        // let index = ;
-
-        Some(FlatLocation::blank())
-         */
     }
 }
 
 impl std::ops::Index<Location> for MazeGrid {
-    type Output = Location;
+    type Output = MazeCell;
 
-    fn index(&self, loc: Location) -> &Location {
+    fn index(&self, loc: Location) -> &MazeCell {
         unimplemented!() // TODO
     }
 }
 
 impl std::ops::IndexMut<Location> for MazeGrid {
-    fn index_mut<'a>(&'a mut self, loc: Location) -> &'a mut Location {
+    fn index_mut<'a>(&'a mut self, loc: Location) -> &'a mut MazeCell {
         unimplemented!() // TODO
     }
 }
 
 impl std::ops::Index<&Location> for MazeGrid {
-    type Output = Location;
+    type Output = MazeCell;
 
-    fn index(&self, loc: &Location) -> &Location {
+    fn index(&self, loc: &Location) -> &MazeCell {
         unimplemented!() // TODO
+                         // let v_loc = self.locate(loc);
+                         // &self.cells[v_loc.idx]
     }
 }
 
 impl std::ops::IndexMut<&Location> for MazeGrid {
-    fn index_mut<'a>(&'a mut self, loc: &Location) -> &'a mut Location {
+    fn index_mut<'a>(&'a mut self, loc: &Location) -> &'a mut MazeCell {
         unimplemented!() // TODO
     }
 }

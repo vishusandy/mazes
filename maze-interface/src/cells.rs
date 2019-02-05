@@ -13,6 +13,39 @@ mod maze_grid;
 mod points;
 
 use points::Point;
+use std::fmt;
+
+#[derive(Clone, Debug)]
+pub struct LocationFromStrError;
+impl std::error::Error for LocationFromStrError {
+    fn description(&self) -> &str {
+        "An error occurred calling from_str() on Location.  To convert a Location object into a String it must be in the format: '0.0, 0.0 N' where N is eone of: N, E, S, or W (upper or lowercase)."
+    }
+}
+impl std::fmt::Display for LocationFromStrError {
+    // fn fmt(&self, f: &mut std::fmt:Formatter) -> std::fmt::Result {
+    //     write!(f, "An error occurred calling from_str() on Location.  To convert a Location object into a String it must be in the format: '0.0, 0.0 N' where N is eone of: N, E, S, or W (upper or lowercase).")
+    // }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "An error occurred calling from_str() on Location.  To convert a Location object into a String it must be in the format: '0.0, 0.0 N' where N is eone of: N, E, S, or W (upper or lowercase).")
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct EdgeFromStrError;
+impl std::error::Error for EdgeFromStrError {
+    fn description(&self) -> &str {
+        "An error occurred calling from_str() on Edge.  To convert an Edge object to a String it must be a single character, one of: N, E, S, or W (upper or lowercase)."
+    }
+}
+impl std::fmt::Display for EdgeFromStrError {
+    // fn fmt(&self, f: &mut std::fmt:Formatter) -> std::fmt::Result {
+    //     write!(f, "An error occurred calling from_str() on Location.  To convert a Location object into a String it must be in the format: '0.0, 0.0 N' where N is eone of: N, E, S, or W (upper or lowercase).")
+    // }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "An error occurred calling from_str() on Edge.  To convert an Edge object to a String it must be a single character, one of: N, E, S, or W (upper or lowercase).")
+    }
+}
 
 /// Indicates a side of a cell.
 #[derive(Clone, Debug)]
@@ -38,6 +71,37 @@ impl Edge {
     }
 }
 
+impl std::str::FromStr for Edge {
+    type Err = EdgeFromStrError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() != 1 {
+            Err(EdgeFromStrError)
+        } else {
+            let upper = s[0..1].to_uppercase();
+            match &&upper[..] {
+                &"N" => Ok(Edge::N),
+                &"E" => Ok(Edge::E),
+                &"S" => Ok(Edge::S),
+                &"W" => Ok(Edge::W),
+                _ => Err(EdgeFromStrError),
+            }
+        }
+    }
+}
+
+impl std::convert::From<EdgeFromStrError> for LocationFromStrError {
+    fn from(err: EdgeFromStrError) -> Self {
+        LocationFromStrError
+    }
+}
+
+impl std::convert::From<std::num::ParseIntError> for LocationFromStrError {
+    fn from(err: std::num::ParseIntError) -> Self {
+        LocationFromStrError
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Location {
     side: Edge,
@@ -55,6 +119,25 @@ impl Location {
         // let point: Point = Point { x, y };
         let point: Point = Point::new(x, y);
         Location { side, point }
+    }
+}
+
+impl std::str::FromStr for Location {
+    type Err = LocationFromStrError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.contains(',') {
+            let split: Vec<_> = s.split(',').collect();
+            match &split[..] {
+                &[x, y, c] => Ok(Location {
+                    side: Edge::from_str(c)?,
+                    point: Point::new(x.parse()?, y.parse()?),
+                }),
+                _ => Err(LocationFromStrError),
+            }
+        } else {
+            Err(LocationFromStrError)
+        }
     }
 }
 

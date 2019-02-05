@@ -1,4 +1,4 @@
-use crate::cells::maze_grid::MazeGrid;
+use super::maze_grid::MazeGrid;
 
 /// A (x,y) point in the grid.
 // struct Point(u8, u8);

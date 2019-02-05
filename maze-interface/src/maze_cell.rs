@@ -1,5 +1,5 @@
-use crate::cells::points::Point;
-use crate::cells::Edge;
+use crate::points::Point;
+use crate::Edge;
 
 /// The MazeCell structure records the state of a MazeGrid cell.  It contains
 /// information about what borders the cell is on (top, left, topleft border)
