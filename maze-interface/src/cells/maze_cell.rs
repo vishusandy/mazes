@@ -4,6 +4,7 @@ use crate::cells::Edge;
 /// The MazeCell structure records the state of a MazeGrid cell.  It contains
 /// information about what borders the cell is on (top, left, topleft border)
 /// as well as whether each side of the cell has a visible edge.
+#[derive(Clone, Debug)]
 pub struct MazeCell(u8);
 
 impl MazeCell {
@@ -84,7 +85,7 @@ impl MazeCell {
 
     /// Check if the cell can have a specified edge removed.  If the cell lays
     /// on a border then that edge cannot be removed.
-    fn can_remove_edge(&self, side: &Edge) -> bool {
+    fn can_modify_edge(&self, side: &Edge) -> bool {
         // check if the cell is on the edge to be removed,
         // do not allow the edge to be removed if it is on
         match side {
@@ -98,12 +99,27 @@ impl MazeCell {
     /// Remove a specified edge from the cell, if the edge does not lay on an
     /// outer border.
     pub fn remove_edge(&mut self, side: &Edge) -> bool {
-        if self.can_remove_edge(side) {
+        if self.can_modify_edge(side) {
             let val = side.value();
             // check if the cell has the specified edge
             if self.0 & val != 0 {
                 // and remove it
                 self.0 -= val;
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
+
+    /// Add a edge to a cell if it does not lay on a border and is not visible yet
+    pub fn add_edge(&mut self, side: &Edge) -> bool {
+        if self.can_modify_edge(side) {
+            let val = side.value();
+            if self.0 & val == 0 {
+                self.0 += val;
                 true
             } else {
                 false

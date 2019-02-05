@@ -2,6 +2,7 @@ use crate::cells::maze_grid::MazeGrid;
 
 /// A (x,y) point in the grid.
 // struct Point(u8, u8);
+#[derive(Clone, Debug)]
 pub struct Point {
     x: i16,
     y: i16,
@@ -54,6 +55,12 @@ impl Point {
 
     pub fn on_right_border(&self, grid_size: u8) -> bool {
         self.x == (grid_size - 1) as i16
+    }
+    pub fn on_any_border(&self, grid_size: u8) -> bool {
+        self.on_right_border(grid_size)
+            || self.on_left_border(grid_size)
+            || self.on_top_border(grid_size)
+            || self.on_bottom_border(grid_size)
     }
 }
 

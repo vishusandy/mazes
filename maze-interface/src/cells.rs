@@ -15,6 +15,7 @@ mod points;
 use points::Point;
 
 /// Indicates a side of a cell.
+#[derive(Clone, Debug)]
 pub enum Edge {
     N,
     W,
@@ -37,7 +38,8 @@ impl Edge {
     }
 }
 
-struct Location {
+#[derive(Clone, Debug)]
+pub struct Location {
     side: Edge,
     point: Point,
 }
@@ -53,5 +55,23 @@ impl Location {
         // let point: Point = Point { x, y };
         let point: Point = Point::new(x, y);
         Location { side, point }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct FlatLocation {
+    side: Edge,
+    idx: u16,
+}
+
+impl FlatLocation {
+    pub fn new(idx: u16, side: Edge) -> Self {
+        Self { side, idx }
+    }
+    pub fn blank() -> Self {
+        Self {
+            side: Edge::N,
+            idx: 0u16,
+        }
     }
 }
