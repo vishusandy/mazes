@@ -1,0 +1,17 @@
+[package]
+name = "maze_interface"
+version = "0.1.0"
+authors = ["Andrew Prindle <prindle.andrew@gmail.com>"]
+edition = "2018"
+workspace = "../"
+
+[dependencies]
+# Must use 0.20.0 because 0.21.0 or later breaks it
+image = "0.20.0"
+imageproc = "0.17.0"
+line_drawing = "0.7.0"
+lazy_static = "1.2.0"
+
+
+
+

@@ -1,7 +1,0 @@
-[package]
-name = "maze-algos"
-version = "0.1.0"
-authors = ["Andrew Prindle <prindle.andrew@gmail.com>"]
-edition = "2018"
-
-[dependencies]
