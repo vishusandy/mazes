@@ -2,10 +2,16 @@
 #![allow(unused_variables)]
 #![allow(unused_imports)]
 
-/* Todo:
-    Add a render() method to MazeGrid
+/* FIX:
+    Fix MazeCell::on_left() and MazeCell::on_right() - do not account for compact representation
+    The rendered image is SUPER wonky now.
+
+   TODO:
     Add a display implementation that will draw a maze using ASCII chars (`_`, and `|`)
+        Right now a testing implementation does this, make a copy in MazeGrid's impl
     In save_png() return the actual file size of the newly created image file instead of 0 always
+        Also move logic of cell coordinates into render module
+    Move Location into separate module
 */
 
 // mod maze;
@@ -276,6 +282,20 @@ mod tests {
             panic!();
         }
     }
+    fn print_cells() {
+        println!("\n");
+        for cell in MAZEGRID.cells() {
+            println!(
+                "Idx: {:03} borders: n={} e={} s={} w={} edges={}",
+                cell.idx(),
+                cell.on_top(),
+                cell.on_right(),
+                cell.on_bottom(),
+                cell.on_left(),
+                if cell.have_all_edges() { "all" } else { "none" }
+            );
+        }
+    }
     fn maze_grid(val: bool) {
         let mut i = 0u8;
         println!("");
@@ -361,6 +381,7 @@ mod tests {
     }
     #[test]
     fn test_grid() {
+        print_cells();
         maze_grid(true);
         maze_grid(false);
     }

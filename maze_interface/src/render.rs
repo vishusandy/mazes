@@ -13,7 +13,11 @@ pub struct Render {
 }
 
 impl Render {
-    pub fn cell_corners_f32(&self, cell: &MazeCell, length: u8) -> crate::coords::RectCoords<f32> {
+    pub fn new(cell_size: u16, padding: u8) -> Render {
+        Render { cell_size, padding }
+    }
+    // #[inline]
+    pub fn cell_points_f32(&self, cell: &MazeCell, length: u8) -> (f32, f32, f32, f32) {
         let padding = self.padding as u32;
         let cell_size = self.cell_size;
         let size = cell_size as u32;
@@ -30,14 +34,10 @@ impl Render {
         let x_e = x_w + ((cell_size + 1) as f32);
         let y_n = ((r * size) + padding + 1 + r) as f32;
         let y_s = y_n + ((cell_size + 1) as f32);
-
-        let nw = (x_w, y_n);
-        let ne = (x_e, y_n);
-        let se = (x_e, y_s);
-        let sw = (x_w, y_s);
-        RectCoords::new(nw, ne, se, sw)
+        (x_w, x_e, y_n, y_s)
     }
-    pub fn cell_corners_u32(&self, cell: &MazeCell, length: u8) -> crate::coords::RectCoords<u32> {
+    // #[inline]
+    pub fn cell_points_u32(&self, cell: &MazeCell, length: u8) -> (u32, u32, u32, u32) {
         let padding = self.padding as u32;
         let cell_size = self.cell_size;
         let size = cell_size as u32;
@@ -54,6 +54,19 @@ impl Render {
         let x_e = x_w + (cell_size as u32 + 1);
         let y_n = (r * size) + padding + 1 + r;
         let y_s = y_n + (cell_size as u32 + 1);
+        (x_w, x_e, y_n, y_s)
+    }
+    pub fn cell_corners_f32(&self, cell: &MazeCell, length: u8) -> crate::coords::RectCoords<f32> {
+        let (x_w, x_e, y_n, y_s) = self.cell_points_f32(cell, length);
+
+        let nw = (x_w, y_n);
+        let ne = (x_e, y_n);
+        let se = (x_e, y_s);
+        let sw = (x_w, y_s);
+        RectCoords::new(nw, ne, se, sw)
+    }
+    pub fn cell_corners_u32(&self, cell: &MazeCell, length: u8) -> crate::coords::RectCoords<u32> {
+        let (x_w, x_e, y_n, y_s) = self.cell_points_u32(cell, length);
 
         let nw = (x_w, y_n);
         let ne = (x_e, y_n);

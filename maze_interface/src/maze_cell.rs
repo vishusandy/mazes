@@ -36,6 +36,8 @@ impl MazeCell {
     /// be all on by default.  To create a new cell without all of the edges use the
     /// blank() function instead of new().
     pub fn new(grid_size: u8, pos: &Point, index: u16) -> Self {
+        // let x_offset = if  // TODO: need to offset x because of compact representation
+        // let pos: Point = pos + Point::new();
         Self(
             (pos.on_bottom_border(grid_size) as u8 * Self::BOTTOM_BORDER)
                 + (pos.on_top_border(grid_size) as u8 * Self::TOP_BORDER)
@@ -153,6 +155,10 @@ impl MazeCell {
     #[inline]
     pub fn has_any_edge(&self) -> bool {
         (self.0 & Self::ALL_EDGES) != 0
+    }
+
+    pub fn have_all_edges(&self) -> bool {
+        self.0 & Self::ALL_EDGES == Self::ALL_EDGES
     }
 
     /// Check if the cell can have a specified edge removed.  If the cell lays

@@ -113,15 +113,9 @@ impl MazeGrid {
         border_padding: u8,
     ) -> Option<usize> {
         use image::{Rgb, RgbImage};
-        use imageproc::drawing::draw_line_segment_mut;
-        // #[allow(unused_imports)]
-        // use imageproc::drawing::{draw_line_segment, draw_line_segment_mut};
-        // #[allow(unused_imports)]
-        // use imageproc::rect::Rect;
-        // use imageproc::drawing::{
-        //     draw_cross_mut, draw_filled_circle_mut, draw_filled_rect_mut, draw_hollow_circle_mut,
-        //     draw_hollow_rect_mut, draw_line_segment_mut,
-        // };
+        use imageproc::drawing::{draw_filled_rect_mut, draw_line_segment_mut};
+        use imageproc::rect::Rect;
+        // use imageproc::rect::{Rect, Region}; // Region could come in handy
 
         let rows = self.length;
         let padding = border_padding as u32;
@@ -131,7 +125,10 @@ impl MazeGrid {
 
         #[allow(unused_mut)]
         let mut image = RgbImage::new(img_size as u32, img_size as u32);
-        let black = Rgb([255u8, 255u8, 255u8]);
+        let fg = Rgb([255u8, 255u8, 255u8]);
+        let bg = Rgb([0u8, 0u8, 0u8]);
+        let rect = Rect::at(0, 0).of_size(img_size, img_size);
+        draw_filled_rect_mut(&mut image, rect, bg);
 
         let nw_grid_corner = (padding as f32, padding as f32);
         let sw_grid_corner = (padding as f32, (img_size - padding) as f32);
@@ -139,16 +136,16 @@ impl MazeGrid {
         let se_grid_corner = (((img_size - padding) as f32), (img_size - padding) as f32);
 
         // Draw top border line
-        draw_line_segment_mut(&mut image, nw_grid_corner, ne_grid_corner, black);
+        draw_line_segment_mut(&mut image, nw_grid_corner, ne_grid_corner, fg);
 
         // Draw bottom border line
-        draw_line_segment_mut(&mut image, sw_grid_corner, se_grid_corner, black);
+        draw_line_segment_mut(&mut image, sw_grid_corner, se_grid_corner, fg);
 
         // Draw left border line
-        draw_line_segment_mut(&mut image, nw_grid_corner, sw_grid_corner, black);
+        draw_line_segment_mut(&mut image, nw_grid_corner, sw_grid_corner, fg);
 
         // Draw right border line
-        draw_line_segment_mut(&mut image, ne_grid_corner, se_grid_corner, black);
+        draw_line_segment_mut(&mut image, ne_grid_corner, se_grid_corner, fg);
 
         let mut row = 0u8;
         let mut col = 0u8;
@@ -157,36 +154,32 @@ impl MazeGrid {
             // surrounding cells will fill the skipped cells' borders.
 
             // let nw_corner = ((col as u32) * (cell_size as u32)) + 1 + padding;
-            let x_w = (((col as u32) * (cell_size as u32)) + padding + 1 + (col as u32)) as f32;
-            let x_e = x_w + ((cell_size + 1) as f32);
+            let render = crate::render::Render::new(cell_size, border_padding);
+            // let crate::coords::RectCoords { nw, ne, se, sw } =
+            //     render.cell_corners_f32(&cell, self.length);
+            // let x_w = nw.0;
+            // let x_e = ne.0;
+            // let y_n = nw.1;
+            // let y_s = sw.1;
 
-            let y_n = (((row as u32) * (cell_size as u32)) + padding + 1 + (row as u32)) as f32;
-            let y_s = y_n + ((cell_size + 1) as f32);
+            let (x_w, x_e, y_n, y_s) = render.cell_points_f32(cell, self.length);
 
-            if
-            /* !cell.on_top() && */
-            cell.has_top_edge() {
-                draw_line_segment_mut(&mut image, (x_w, y_n), (x_e, y_n), black);
+            if cell.has_top_edge() {
+                draw_line_segment_mut(&mut image, (x_w, y_n), (x_e, y_n), fg);
             }
-            if
-            /* !cell.on_right() && */
-            cell.has_right_edge() {
-                draw_line_segment_mut(&mut image, (x_e, y_n), (x_e, y_s), black);
+            if cell.has_right_edge() {
+                draw_line_segment_mut(&mut image, (x_e, y_n), (x_e, y_s), fg);
             }
-            if
-            /* !cell.on_bottom() && */
-            cell.has_bottom_edge() {
-                draw_line_segment_mut(&mut image, (x_w, y_s), (x_e, y_s), black);
+            if cell.has_bottom_edge() {
+                draw_line_segment_mut(&mut image, (x_w, y_s), (x_e, y_s), fg);
             }
-            if
-            /* !cell.on_left() && */
-            cell.has_left_edge() {
-                draw_line_segment_mut(&mut image, (x_w, y_n), (x_w, y_s), black);
+            if cell.has_left_edge() {
+                draw_line_segment_mut(&mut image, (x_w, y_n), (x_w, y_s), fg);
             }
 
             let center_x = x_w as u32 + (cell_size as u32 / 2);
             let center_y = y_n as u32 + (cell_size as u32 / 2);
-            image.put_pixel(center_x, center_y, black);
+            image.put_pixel(center_x, center_y, fg);
 
             // Increment or reset the column, and increment row if end of row
             col += 1;
