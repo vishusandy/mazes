@@ -52,10 +52,10 @@ impl MazeGrid {
         let mut cells: Vec<MazeCell> = Vec::with_capacity((length * length + 1) as usize);
         for y in 0..(length) {
             for x in 0..(length) {
-                let idx = y * length + x;
+                let idx = (y as u16) * (length as u16) + (x as u16);
                 if idx % 2 == 0 {
                     let pt = Point::new(x as i16, y as i16);
-                    cells.push(MazeCell::new(length, &pt));
+                    cells.push(MazeCell::new(length, &pt, idx / 2));
                 }
             }
         }
@@ -69,10 +69,10 @@ impl MazeGrid {
         let mut cells: Vec<MazeCell> = Vec::with_capacity((length * length + 1) as usize);
         for y in 0..(length) {
             for x in 0..(length) {
-                let idx = y * length + x;
+                let idx = (y as u16) * (length as u16) + (x as u16);
                 if idx % 2 == 0 {
                     let pt = Point::new(x as i16, y as i16);
-                    cells.push(MazeCell::blank(length, &pt));
+                    cells.push(MazeCell::blank(length, &pt, idx / 2));
                 }
             }
         }
@@ -102,81 +102,7 @@ impl MazeGrid {
     /// locate() takes a MazeGrid (self), and a Location and determines and
     /// returns the cell and new edge that stores the data for that edge.
     pub fn locate(&self, loc: &Location) -> FlatLocation {
-        // destructure the Point in cell into col and row variables
-        let Location { side, point: cell } = loc;
-        let row = cell.y();
-        let col = cell.x();
-        // multiply length by the row number and add the column number to
-        // get the actual index in an inefficient grid implementation.
-        // this is divided by 2 to get the efficient implementation index,
-        // which may be a whole integer number or may have a .5 remainder
-        // (which indicates it does not refer to )
-        let full_index = (row as u16) * (self.length as u16) + (col as u16);
-
-        let v_div = (full_index as f32) / 2f32;
-        let v_side: Edge;
-        let v_idx: u16;
-        if v_div != v_div.trunc() {
-            let v_len = self.length as u16 / 2u16;
-            match side {
-                Edge::N => {
-                    if cell.on_top_border(self.length) {
-                        // floor() v_idx here because the northern border of the grid
-                        // starts at an even v_idx, meaning if it were ceil()ed the cell
-                        // could potentially reference the next row.
-                        v_idx = v_div.floor() as u16;
-                        v_side = Edge::N;
-                    } else {
-                        // floor() to get previous cell in vector and remove a row
-                        v_idx = (v_div.floor() as u16) - v_len;
-                        v_side = Edge::S;
-                    }
-                }
-                Edge::E => {
-                    if cell.on_right_border(self.length) {
-                        // here v_idx will never go over the length of the cells vector
-                        // as it is floored and then one row is added (since the item is
-                        // on the east border the vector must have at least one more row).
-                        v_idx = v_div.floor() as u16 + v_len;
-                        v_side = Edge::E;
-                    } else {
-                        // ceil() to get next cell in vector
-                        v_idx = v_div.ceil() as u16;
-                        v_side = Edge::W;
-                    }
-                }
-                Edge::S => {
-                    if cell.on_bottom_border(self.length) {
-                        // ceil() v_idx here because the southern border of the grid
-                        // has a v_idx with a remainder of .5, meaning if it were floor()ed
-                        // the cell could potentially reference a previous row.
-                        v_idx = v_div.ceil() as u16;
-                        v_side = Edge::S;
-                    } else {
-                        // ceil() to get next cell in the vector and add a row
-                        v_idx = (v_div.ceil() as u16) + v_len;
-                        v_side = Edge::N;
-                    }
-                }
-                Edge::W => {
-                    if cell.on_left_border(self.length) {
-                        // here v_idx will never go over the length of the cells vector
-                        // as it is ceiled and then one row subtracted (since the item is
-                        // on the west border the vector must have at least one previous row).
-                        v_idx = v_div.ceil() as u16 - v_len;
-                        v_side = Edge::W;
-                    } else {
-                        // floor() to get previous cell in the vector
-                        v_idx = v_div.floor() as u16;
-                        v_side = Edge::E;
-                    }
-                }
-            }
-            FlatLocation::new(v_idx, v_side)
-        } else {
-            // index is even, so no change
-            FlatLocation::new(v_div as u16, side.clone())
-        }
+        loc.locate(self.length)
     }
 
     /// Returns the size of the file written to disk
@@ -227,6 +153,9 @@ impl MazeGrid {
         let mut row = 0u8;
         let mut col = 0u8;
         for cell in self.cells.iter() {
+            // TODO: scatter the grid cells - every other cell is skipped and the
+            // surrounding cells will fill the skipped cells' borders.
+
             // let nw_corner = ((col as u32) * (cell_size as u32)) + 1 + padding;
             let x_w = (((col as u32) * (cell_size as u32)) + padding + 1 + (col as u32)) as f32;
             let x_e = x_w + ((cell_size + 1) as f32);
@@ -234,18 +163,30 @@ impl MazeGrid {
             let y_n = (((row as u32) * (cell_size as u32)) + padding + 1 + (row as u32)) as f32;
             let y_s = y_n + ((cell_size + 1) as f32);
 
-            if !cell.on_top() && cell.has_top_edge() {
+            if
+            /* !cell.on_top() && */
+            cell.has_top_edge() {
                 draw_line_segment_mut(&mut image, (x_w, y_n), (x_e, y_n), black);
             }
-            if !cell.on_right() && cell.has_right_edge() {
+            if
+            /* !cell.on_right() && */
+            cell.has_right_edge() {
                 draw_line_segment_mut(&mut image, (x_e, y_n), (x_e, y_s), black);
             }
-            if !cell.on_bottom() && cell.has_bottom_edge() {
+            if
+            /* !cell.on_bottom() && */
+            cell.has_bottom_edge() {
                 draw_line_segment_mut(&mut image, (x_w, y_s), (x_e, y_s), black);
             }
-            if !cell.on_left() && cell.has_left_edge() {
+            if
+            /* !cell.on_left() && */
+            cell.has_left_edge() {
                 draw_line_segment_mut(&mut image, (x_w, y_n), (x_w, y_s), black);
             }
+
+            let center_x = x_w as u32 + (cell_size as u32 / 2);
+            let center_y = y_n as u32 + (cell_size as u32 / 2);
+            image.put_pixel(center_x, center_y, black);
 
             // Increment or reset the column, and increment row if end of row
             col += 1;

@@ -5,7 +5,7 @@ use crate::Edge;
 /// information about what borders the cell is on (top, left, topleft border)
 /// as well as whether each side of the cell has a visible edge.
 #[derive(Clone, Debug)]
-pub struct MazeCell(u8);
+pub struct MazeCell(u8, u16);
 
 impl MazeCell {
     // Border state constants
@@ -35,22 +35,24 @@ impl MazeCell {
     /// Only the borders the cell is touching are saved in the cell, the edges will
     /// be all on by default.  To create a new cell without all of the edges use the
     /// blank() function instead of new().
-    pub fn new(grid_size: u8, pos: &Point) -> Self {
+    pub fn new(grid_size: u8, pos: &Point, index: u16) -> Self {
         Self(
             (pos.on_bottom_border(grid_size) as u8 * Self::BOTTOM_BORDER)
                 + (pos.on_top_border(grid_size) as u8 * Self::TOP_BORDER)
                 + (pos.on_left_border(grid_size) as u8 * Self::LEFT_BORDER)
                 + (pos.on_right_border(grid_size) as u8 * Self::RIGHT_BORDER)
                 + Self::ALL_EDGES,
+            index,
         )
     }
 
-    pub fn blank(grid_size: u8, pos: &Point) -> Self {
+    pub fn blank(grid_size: u8, pos: &Point, index: u16) -> Self {
         Self(
             (pos.on_bottom_border(grid_size) as u8 * Self::BOTTOM_BORDER)
                 + (pos.on_top_border(grid_size) as u8 * Self::TOP_BORDER)
                 + (pos.on_left_border(grid_size) as u8 * Self::LEFT_BORDER)
                 + (pos.on_right_border(grid_size) as u8 * Self::RIGHT_BORDER),
+            index,
         )
     }
 
@@ -77,6 +79,12 @@ impl MazeCell {
         self.0 = val;
     }
 
+    pub fn index(&self) -> u16 {
+        self.1
+    }
+    pub fn idx(&self) -> u16 {
+        self.1
+    }
     // BORDERS
 
     /// Check if the cell is on the bottom border
