@@ -19,17 +19,10 @@ impl Render {
     // #[inline]
     pub fn points_f32(&self, cell: &MazeCell, length: u8) -> (f32, f32, f32, f32) {
         let padding = self.padding as u32;
-        let cell_size = self.cell_size;
         let size = self.cell_size as u32;
 
-        let idx = cell.idx();
-        let fidx = idx * 2;
-
-        let row = cell.y();
-        let col = cell.x();
-
-        let r = row as u32;
-        let c = col as u32;
+        let r = cell.y() as u32;
+        let c = cell.x() as u32;
 
         let xw = c * size + padding + 1 + c;
         let xe = xw + size + 1;
@@ -41,17 +34,10 @@ impl Render {
 
     pub fn points_u32(&self, cell: &MazeCell, length: u8) -> (u32, u32, u32, u32) {
         let padding = self.padding as u32;
-        let cell_size = self.cell_size;
         let size = self.cell_size as u32;
 
-        let idx = cell.idx();
-        let fidx = idx * 2;
-
-        let row = cell.y();
-        let col = cell.x();
-
-        let r = row as u32;
-        let c = col as u32;
+        let r = cell.y() as u32;
+        let c = cell.x() as u32;
 
         let xw = c * size + padding + 1 + c;
         let xe = xw + size + 1;

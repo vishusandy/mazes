@@ -9,7 +9,7 @@ use std::time::Instant;
 
 pub fn maze() -> std::io::Result<usize> {
     let start_grid = Instant::now();
-    let grid = MazeGrid::new(8u8);
+    let grid = MazeGrid::new(7u8);
     let grid_time = start_grid.elapsed();
 
     let start_render = Instant::now();

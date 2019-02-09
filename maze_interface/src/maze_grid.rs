@@ -1,6 +1,7 @@
+use crate::location::{FlatLocation, Location};
 use crate::maze_cell::MazeCell;
 use crate::points::Point;
-use crate::{Edge, FlatLocation, Location};
+use crate::Edge;
 
 /// MazeGrid is primarily a Vector of MazeCells.  There are two good ways to
 /// organize the cells in the vector.
@@ -218,7 +219,7 @@ impl std::ops::Index<&Location> for MazeGrid {
     fn index(&self, loc: &Location) -> &MazeCell {
         // unimplemented!() // TODO
         let v_loc = self.locate(loc);
-        &self.cells[v_loc.idx as usize]
+        &self.cells[v_loc.idx() as usize]
     }
 }
 

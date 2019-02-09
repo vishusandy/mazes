@@ -52,7 +52,7 @@ impl MazeCell {
         // the full index
         let fidx = index * 2;
         let y = fidx / len;
-        let x = fidx - (len * y) + if y % 2 == 1 { 1 } else { 0 };
+        let x = fidx - (len * y) + if length % 2 == 0 && y % 2 == 1 { 1 } else { 0 };
         let top = y == 0;
         let bottom = y == ((length - 1) as u16);
         let left = x == 0;
