@@ -130,9 +130,14 @@ impl MazeGrid {
         let rect = Rect::at(0, 0).of_size(img_size, img_size);
         draw_filled_rect_mut(&mut image, rect, bg);
 
-        let nw_grid_corner = (padding as f32, padding as f32);
-        let sw_grid_corner = (padding as f32, (img_size - padding) as f32);
-        let ne_grid_corner = (((img_size - padding) as f32), padding as f32);
+        // Before adding 1 to the border grid lines on the top and left
+        // let nw_grid_corner = (padding as f32, padding as f32);
+        // let sw_grid_corner = (padding as f32, (img_size - padding) as f32);
+        // let ne_grid_corner = (((img_size - padding) as f32), padding as f32);
+        // let se_grid_corner = (((img_size - padding) as f32), (img_size - padding) as f32);
+        let nw_grid_corner = ((padding + 1) as f32, (padding + 1) as f32);
+        let sw_grid_corner = ((padding + 1) as f32, (img_size - padding) as f32);
+        let ne_grid_corner = (((img_size - padding) as f32), (padding + 1) as f32);
         let se_grid_corner = (((img_size - padding) as f32), (img_size - padding) as f32);
 
         // Draw top border line
@@ -162,7 +167,7 @@ impl MazeGrid {
             // let y_n = nw.1;
             // let y_s = sw.1;
 
-            let (x_w, x_e, y_n, y_s) = render.cell_points_f32(cell, self.length);
+            let (x_w, x_e, y_n, y_s) = render.points_f32(cell, self.length);
 
             if cell.has_top_edge() {
                 draw_line_segment_mut(&mut image, (x_w, y_n), (x_e, y_n), fg);
@@ -177,8 +182,8 @@ impl MazeGrid {
                 draw_line_segment_mut(&mut image, (x_w, y_n), (x_w, y_s), fg);
             }
 
-            let center_x = x_w as u32 + (cell_size as u32 / 2);
-            let center_y = y_n as u32 + (cell_size as u32 / 2);
+            let center_x = x_w as u32 + 1 + (cell_size as u32 / 2);
+            let center_y = y_n as u32 + 1 + (cell_size as u32 / 2);
             image.put_pixel(center_x, center_y, fg);
 
             // Increment or reset the column, and increment row if end of row

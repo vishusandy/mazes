@@ -1,101 +1,197 @@
 MazeGrid {
     length: 8,
     cells: [
-        MazeCell(
-            250
-        ),
-        MazeCell(
-            248
-        ),
-        MazeCell(
-            248
-        ),
-        MazeCell(
-            248
-        ),
-        MazeCell(
-            242
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            242
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            242
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            242
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            242
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            242
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            240
-        ),
-        MazeCell(
-            243
-        ),
-        MazeCell(
-            241
-        ),
-        MazeCell(
-            241
-        ),
-        MazeCell(
-            241
-        )
+        MazeCell {
+            state: 250,
+            index: 0,
+            x: 0,
+            y: 0
+        },
+        MazeCell {
+            state: 248,
+            index: 1,
+            x: 2,
+            y: 0
+        },
+        MazeCell {
+            state: 248,
+            index: 2,
+            x: 4,
+            y: 0
+        },
+        MazeCell {
+            state: 248,
+            index: 3,
+            x: 6,
+            y: 0
+        },
+        MazeCell {
+            state: 240,
+            index: 4,
+            x: 1,
+            y: 1
+        },
+        MazeCell {
+            state: 240,
+            index: 5,
+            x: 3,
+            y: 1
+        },
+        MazeCell {
+            state: 240,
+            index: 6,
+            x: 5,
+            y: 1
+        },
+        MazeCell {
+            state: 244,
+            index: 7,
+            x: 7,
+            y: 1
+        },
+        MazeCell {
+            state: 242,
+            index: 8,
+            x: 0,
+            y: 2
+        },
+        MazeCell {
+            state: 240,
+            index: 9,
+            x: 2,
+            y: 2
+        },
+        MazeCell {
+            state: 240,
+            index: 10,
+            x: 4,
+            y: 2
+        },
+        MazeCell {
+            state: 240,
+            index: 11,
+            x: 6,
+            y: 2
+        },
+        MazeCell {
+            state: 240,
+            index: 12,
+            x: 1,
+            y: 3
+        },
+        MazeCell {
+            state: 240,
+            index: 13,
+            x: 3,
+            y: 3
+        },
+        MazeCell {
+            state: 240,
+            index: 14,
+            x: 5,
+            y: 3
+        },
+        MazeCell {
+            state: 244,
+            index: 15,
+            x: 7,
+            y: 3
+        },
+        MazeCell {
+            state: 242,
+            index: 16,
+            x: 0,
+            y: 4
+        },
+        MazeCell {
+            state: 240,
+            index: 17,
+            x: 2,
+            y: 4
+        },
+        MazeCell {
+            state: 240,
+            index: 18,
+            x: 4,
+            y: 4
+        },
+        MazeCell {
+            state: 240,
+            index: 19,
+            x: 6,
+            y: 4
+        },
+        MazeCell {
+            state: 240,
+            index: 20,
+            x: 1,
+            y: 5
+        },
+        MazeCell {
+            state: 240,
+            index: 21,
+            x: 3,
+            y: 5
+        },
+        MazeCell {
+            state: 240,
+            index: 22,
+            x: 5,
+            y: 5
+        },
+        MazeCell {
+            state: 244,
+            index: 23,
+            x: 7,
+            y: 5
+        },
+        MazeCell {
+            state: 242,
+            index: 24,
+            x: 0,
+            y: 6
+        },
+        MazeCell {
+            state: 240,
+            index: 25,
+            x: 2,
+            y: 6
+        },
+        MazeCell {
+            state: 240,
+            index: 26,
+            x: 4,
+            y: 6
+        },
+        MazeCell {
+            state: 240,
+            index: 27,
+            x: 6,
+            y: 6
+        },
+        MazeCell {
+            state: 241,
+            index: 28,
+            x: 1,
+            y: 7
+        },
+        MazeCell {
+            state: 241,
+            index: 29,
+            x: 3,
+            y: 7
+        },
+        MazeCell {
+            state: 241,
+            index: 30,
+            x: 5,
+            y: 7
+        },
+        MazeCell {
+            state: 245,
+            index: 31,
+            x: 7,
+            y: 7
+        }
     ]
 }

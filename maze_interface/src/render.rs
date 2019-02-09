@@ -17,6 +17,57 @@ impl Render {
         Render { cell_size, padding }
     }
     // #[inline]
+    pub fn points_f32(&self, cell: &MazeCell, length: u8) -> (f32, f32, f32, f32) {
+        let padding = self.padding as u32;
+        let cell_size = self.cell_size;
+        let size = self.cell_size as u32;
+
+        let idx = cell.idx();
+        let fidx = idx * 2;
+
+        let row = cell.y();
+        let col = cell.x();
+
+        let r = row as u32;
+        let c = col as u32;
+
+        let xw = c * size + padding + 1 + c;
+        let xe = xw + size + 1;
+        let yn = r * size + padding + 1 + r;
+        let ys = yn + size + 1;
+
+        (xw as f32, xe as f32, yn as f32, ys as f32)
+    }
+
+    pub fn points_u32(&self, cell: &MazeCell, length: u8) -> (u32, u32, u32, u32) {
+        let padding = self.padding as u32;
+        let cell_size = self.cell_size;
+        let size = self.cell_size as u32;
+
+        let idx = cell.idx();
+        let fidx = idx * 2;
+
+        let row = cell.y();
+        let col = cell.x();
+
+        let r = row as u32;
+        let c = col as u32;
+
+        let xw = c * size + padding + 1 + c;
+        let xe = xw + size + 1;
+        let yn = r * size + padding + r + if r == 0 { 0 } else { 1 };
+        let ys = yn + size + 1;
+
+        (xw, xe, yn, ys)
+    }
+
+    pub fn corners_f32(&self, cell: &MazeCell, length: u8) -> crate::coords::RectCoords<f32> {
+        unimplemented!() // TODO
+    }
+    pub fn corners_u32(&self, cell: &MazeCell, length: u8) -> crate::coords::RectCoords<u32> {
+        unimplemented!() // TODO
+    }
+
     pub fn cell_points_f32(&self, cell: &MazeCell, length: u8) -> (f32, f32, f32, f32) {
         let padding = self.padding as u32;
         let cell_size = self.cell_size;
