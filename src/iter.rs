@@ -1,7 +1,60 @@
-use crate::maze::{CardinalGrid, Grid};
+use crate::maze::{CardinalGrid, Cell, Grid};
 use crate::trans::*;
 use crate::util::*;
+use rand::Rng;
 use std::marker::PhantomData;
+
+pub struct Rand<'g, 'r, R: Rng + ?Sized, G: Grid> {
+    rng: &'r mut R,
+    count: Visit,
+    grid: &'g G,
+    shuffle: Vec<Index>,
+}
+impl<'g, 'r, R: Rng + ?Sized, G: Grid> Rand<'g, 'r, R, G> {
+    pub(in crate) fn new(grid: &'g G, rng: &'r mut R) -> Self {
+        use rand::seq::SliceRandom;
+        let mut shuffle = (0..*grid.capacity())
+            .map(|i| i.into())
+            .collect::<Vec<Index>>();
+        shuffle.shuffle(rng);
+        Self {
+            rng,
+            count: Visit::zero(),
+            grid,
+            shuffle,
+        }
+    }
+    pub fn random_id(&mut self) -> Index {
+        self.rng.gen_range(0..*self.grid.capacity()).into()
+    }
+    pub fn random_cell(&mut self) -> &'g G::C {
+        self.grid.lookup(self.random_id())
+    }
+    pub fn id_from_list(&mut self, list: &[Index]) -> Index {
+        use rand::seq::SliceRandom;
+        *list.choose(self.rng).unwrap()
+    }
+    pub fn cell_from_list(&mut self, list: &[Index]) -> &'g G::C {
+        self.grid.lookup(self.id_from_list(list))
+    }
+    pub fn random_neighbor_id(&mut self, cell: &'g G::C) -> Index {
+        self.id_from_list(&*cell.neighbor_ids())
+    }
+}
+impl<'g, 'r, R: Rng + ?Sized, G: Grid> Iterator for Rand<'g, 'r, R, G> {
+    type Item = &'g G::C;
+    fn next(&mut self) -> Option<Self::Item> {
+        if *self.count == *self.grid.capacity() {
+            self.count = Visit::zero();
+            None
+        } else {
+            let count = *self.count;
+            self.count = self.count.plus(1).into();
+            let id = self.shuffle[count];
+            Some(self.grid.lookup(id))
+        }
+    }
+}
 
 pub struct Iter<'g, G: Grid, T: Transform> {
     pub(in crate) grid: &'g G,
@@ -73,6 +126,9 @@ impl<'g, G: Grid, T: Transform> Iterator for Iter<'g, G, T> {
 mod tests {
     use crate::maze::sq::SqGrid;
     use crate::maze::{Cell, Grid, GridProps};
+    use crate::util::Index;
+    use rand::SeedableRng;
+    use rand_xoshiro::SplitMix64;
     #[test]
     fn iters_iter() {
         let grid = SqGrid::setup(4);
@@ -133,5 +189,41 @@ mod tests {
         let ids = grid.sw().map(|c| *c.id()).collect::<Vec<_>>();
         let expected = &[12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3];
         assert_eq!(&ids, expected);
+    }
+    const RAND_SEED: u64 = 8080;
+    #[test]
+    fn iters_random() {
+        let mut rng = SplitMix64::seed_from_u64(RAND_SEED);
+        let grid = SqGrid::setup(4);
+        let ids: Vec<usize> = grid.rand(&mut rng).map(|cell| *cell.id()).collect();
+        let expected: &[usize] = &[10, 1, 8, 7, 3, 11, 0, 6, 15, 14, 12, 4, 13, 9, 5, 2];
+        assert_eq!(&ids, expected);
+    }
+    #[test]
+    fn iters_random_id() {
+        let mut rng = SplitMix64::seed_from_u64(RAND_SEED);
+        let grid = SqGrid::setup(4);
+        let id = grid.rand(&mut rng).random_id();
+        let expected: Index = 9.into();
+        assert_eq!(id, expected);
+    }
+    #[test]
+    fn iters_random_id_from_list() {
+        let mut rng = SplitMix64::seed_from_u64(RAND_SEED);
+        let grid = SqGrid::setup(4);
+        let list: &[Index] = &[1.into(), 3.into(), 5.into(), 7.into()];
+        let id = grid.rand(&mut rng).id_from_list(list);
+        let expected: Index = 7.into();
+        assert_eq!(id, expected);
+    }
+    #[test]
+    fn iters_random_neighbor() {
+        let mut rng = SplitMix64::seed_from_u64(RAND_SEED);
+        let grid = SqGrid::setup(4);
+        let mut rand = grid.rand(&mut rng);
+        let cell = rand.random_cell();
+        let neighbor = rand.random_neighbor_id(cell);
+        let expected: Index = 8.into();
+        assert_eq!(neighbor, expected);
     }
 }

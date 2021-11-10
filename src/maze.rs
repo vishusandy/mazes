@@ -52,6 +52,12 @@ pub trait Grid: GridProps {
     {
         Iter::new(self)
     }
+    fn rand<'g, 'r, R: rand::Rng + Sized>(&'g self, rng: &'r mut R) -> Rand<'g, 'r, R, Self>
+    where
+        Self: Sized + Grid,
+    {
+        Rand::new(self, rng)
+    }
 }
 
 /// All cells in a grid must implement `Cell`.  This allows linking and navigation between cells.
