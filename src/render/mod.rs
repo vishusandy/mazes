@@ -8,8 +8,10 @@ const DEJAVU_BYTES: &[u8] = include_bytes!("../../assets/DejaVuSansMono.ttf");
 
 /// Provides methods for rendering and saving as well as setting options.
 ///
-/// `Renderer` is separate from [`RenderOps`] to allow publicly re-exporting the `Renderer` trait without explicitly exposing [`RenderOps`] methods.
-/// `Renderer` must also implement [`RenderOps`].
+/// `Renderer` is separate from [`RenderOps`] to allow publicly re-exporting the `Renderer` trait
+/// without also publicly exporting [`RenderOps`] methods.
+///
+/// A `Renderer` must also implement [`RenderOps`].
 ///
 /// # Example
 /// ```
@@ -20,9 +22,13 @@ const DEJAVU_BYTES: &[u8] = include_bytes!("../../assets/DejaVuSansMono.ttf");
 /// let opts = renderer.options_mut();
 /// opts.set_block_padding(100);
 /// ```
-pub trait Renderer<'f>: RenderOps {
-    fn options(&self) -> &BasicOpts<'f>;
-    fn options_mut<'a>(&'a mut self) -> &'a mut BasicOpts<'f>;
+pub trait Renderer<'f>: RenderOps<'f> {
+    fn opts(&self) -> &BasicOpts<'f> {
+        <Self as RenderOps>::options(self)
+    }
+    fn opts_mut<'a>(&'a mut self) -> &'a mut BasicOpts<'f> {
+        self.options_mut()
+    }
     fn render_rgb(&self) -> RgbaImage {
         let opts = self.options();
         let output = self.render_grid();
@@ -85,11 +91,16 @@ pub trait Renderable: Grid {
 }
 /// Abstraction of rendering options to be used with different rendering methods.
 /// E.g., a map of distances (from a given starting point) will require changing the text label
-/// and possibly the background color of a block (to visually show the distance).
-pub trait RenderOps {
+/// and possibly the background color of a block (to visually show the distance), whereas rendering
+/// a grid can just use the default trait implementations for `block_label()` and `block_bg()`.
+pub trait RenderOps<'f> {
     type G: Grid + Renderable;
-    fn block_label(&self, id: Index) -> String;
-    fn block_bg(&self, id: Index) -> &Rgba<u8>;
+    fn options<'a>(&'a self) -> &'a BasicOpts<'f>;
+    fn options_mut<'a>(&'a mut self) -> &'a mut BasicOpts<'f>;
+    fn block_label(&self, id: Index) -> String {
+        id.to_string()
+    }
+    fn block_bg<'a>(&'a self, id: Index) -> &'a Rgba<u8>;
     fn render_grid(&self) -> RgbaImage;
     fn grid(&self) -> &Self::G;
 }

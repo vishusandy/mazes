@@ -7,14 +7,7 @@ pub struct RenderGrid<'f, 'g, G: Grid + Renderable> {
     grid: &'g G,
     opts: BasicOpts<'f>,
 }
-impl<'f, 'g, G: Grid + Renderable> Renderer<'f> for RenderGrid<'f, 'g, G> {
-    fn options(&self) -> &BasicOpts<'f> {
-        &self.opts
-    }
-    fn options_mut<'a>(&'a mut self) -> &'a mut BasicOpts<'f> {
-        &mut self.opts
-    }
-}
+impl<'f, 'g, G: Grid + Renderable> Renderer<'f> for RenderGrid<'f, 'g, G> {}
 impl<'f, 'g, G: Grid + Renderable> RenderGrid<'f, 'g, G> {
     pub(in crate) fn new(grid: &'g G) -> Self {
         Self {
@@ -26,8 +19,14 @@ impl<'f, 'g, G: Grid + Renderable> RenderGrid<'f, 'g, G> {
         Self { grid, opts }
     }
 }
-impl<'f, 'g, G: Grid + Renderable> RenderOps for RenderGrid<'f, 'g, G> {
+impl<'f, 'g, G: Grid + Renderable> RenderOps<'f> for RenderGrid<'f, 'g, G> {
     type G = G;
+    fn options<'a>(&'a self) -> &'a BasicOpts<'f> {
+        &self.opts
+    }
+    fn options_mut<'a>(&'a mut self) -> &'a mut BasicOpts<'f> {
+        &mut self.opts
+    }
     fn block_label(&self, id: Index) -> String {
         id.to_string()
     }

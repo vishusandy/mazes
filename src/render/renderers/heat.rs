@@ -1,13 +1,35 @@
 use crate::maze::Grid;
-use crate::render::{BasicOpts, RenderOps};
+use crate::render::{BasicOpts, RenderOps, Renderable};
 use crate::util::Index;
+use image::{Rgba, RgbaImage};
 use std::collections::HashMap;
 #[derive(Clone, Debug)]
-pub struct HeatmapRenderer<'f, 'g, 'm, G: Grid + RenderOps> {
+pub struct HeatmapRenderer<'f, 'g, 'm, G: Grid + Renderable> {
     grid: &'g G,
     opts: BasicOpts<'f>,
     settings: HeatMapOpts,
     map: &'m HashMap<Index, usize>,
+}
+impl<'f, 'g, 'm, G: Grid + Renderable> RenderOps<'f> for HeatmapRenderer<'f, 'g, 'm, G> {
+    type G = G;
+    fn options<'a>(&'a self) -> &'a BasicOpts<'f> {
+        &self.opts
+    }
+    fn options_mut<'a>(&'a mut self) -> &'a mut BasicOpts<'f> {
+        &mut self.opts
+    }
+    fn block_label(&self, id: Index) -> String {
+        todo!()
+    }
+    fn block_bg(&self, id: Index) -> &Rgba<u8> {
+        todo!()
+    }
+    fn render_grid(&self) -> RgbaImage {
+        todo!()
+    }
+    fn grid(&self) -> &Self::G {
+        todo!()
+    }
 }
 
 #[derive(Clone, Debug)]
