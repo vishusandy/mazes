@@ -6,6 +6,9 @@ use crate::trans::major::{Major, RowMajor};
 use crate::trans::*;
 use crate::util::*;
 use std::cell::RefCell;
+
+/// Trait to access fields of the implementing type.  These methods were separated from [`Grid`]
+/// to allow more generic use cases.
 pub trait Grid: GridProps {
     fn lookup(&self, id: Index) -> &<Self as GridProps>::C {
         &self.cells()[*id]
@@ -87,18 +90,32 @@ pub trait GridProps {
 pub trait CardinalGrid: Grid {
     fn row_size(&self) -> RowSize;
     fn dimensions(&self) -> (RowSize, ColSize);
-    fn major_order_fn<M: Major>() -> fn(Visit, RowSize, ColSize, M) -> Index {
-        Self::calc_major_order
+    fn major_order_fn<M: Major>(ordinal: Ordinal) -> fn(Visit, RowSize, ColSize, M) -> Index {
+        match ordinal {
+            Ordinal::Nw => Self::calc_major_order_nw,
+            Ordinal::Ne => Self::calc_major_order_ne,
+            Ordinal::Se => Self::calc_major_order_se,
+            Ordinal::Sw => Self::calc_major_order_sw,
+        }
     }
-    fn calc_major_order<M: Major>(id: Visit, rows: RowSize, cols: ColSize, order: M) -> Index {
-        Ordinal::Nw.major_order_index(id.into(), rows, order)
+    fn calc_major_order_nw<M: Major>(id: Visit, rows: RowSize, cols: ColSize, order: M) -> Index {
+        Ordinal::Nw.major_order_index(id, rows, order)
+    }
+    fn calc_major_order_ne<M: Major>(id: Visit, rows: RowSize, cols: ColSize, order: M) -> Index {
+        Ordinal::Ne.major_order_index(id, rows, order)
+    }
+    fn calc_major_order_se<M: Major>(id: Visit, rows: RowSize, cols: ColSize, order: M) -> Index {
+        Ordinal::Se.major_order_index(id, rows, order)
+    }
+    fn calc_major_order_sw<M: Major>(id: Visit, rows: RowSize, cols: ColSize, order: M) -> Index {
+        Ordinal::Sw.major_order_index(id, rows, order)
     }
     fn nw(&self) -> Iter<Self, Nw<RowMajor>>
     where
         Self: Sized + Grid + CardinalGrid,
     {
         let (rows, cols) = self.dimensions();
-        let m = Self::major_order_fn();
+        let m = Self::major_order_fn(Ordinal::Nw);
         Iter::new(self, Nw::new(rows, cols, m))
     }
     fn ne(&self) -> Iter<Self, Ne<RowMajor>>
@@ -106,7 +123,7 @@ pub trait CardinalGrid: Grid {
         Self: Sized + Grid + CardinalGrid,
     {
         let (rows, cols) = self.dimensions();
-        let m = Self::major_order_fn();
+        let m = Self::major_order_fn(Ordinal::Ne);
         Iter::new(self, Ne::new(rows, cols, m))
     }
     fn se(&self) -> Iter<Self, Se<RowMajor>>
@@ -114,7 +131,7 @@ pub trait CardinalGrid: Grid {
         Self: Sized + Grid + CardinalGrid,
     {
         let (rows, cols) = self.dimensions();
-        let m = Self::major_order_fn();
+        let m = Self::major_order_fn(Ordinal::Se);
         Iter::new(self, Se::new(rows, cols, m))
     }
     fn sw(&self) -> Iter<Self, Sw<RowMajor>>
@@ -122,7 +139,7 @@ pub trait CardinalGrid: Grid {
         Self: Sized + Grid + CardinalGrid,
     {
         let (rows, cols) = self.dimensions();
-        let m = Self::major_order_fn();
+        let m = Self::major_order_fn(Ordinal::Sw);
         Iter::new(self, Sw::new(rows, cols, m))
     }
     fn has_boundary(&self, id: Index, dir: Cardinal) -> bool {

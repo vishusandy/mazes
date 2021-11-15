@@ -8,7 +8,6 @@ pub struct Iter<'g, G: Grid, T: Transform> {
     pub(in crate) grid: &'g G,
     pub(in crate) count: Visit,
     pub(in crate) t: T,
-    // pub(in crate) _phantom: std::marker::PhantomData<T>,
 }
 impl<'g, G: Grid, T: Transform> Iter<'g, G, T> {
     pub(in crate) fn new(grid: &'g G, t: T) -> Iter<'g, G, T> {
@@ -16,14 +15,13 @@ impl<'g, G: Grid, T: Transform> Iter<'g, G, T> {
             count: Visit::zero(),
             grid,
             t,
-            // _phantom: PhantomData,
         }
     }
     pub(in crate) fn nest<U: Transform>(self, grid: &'g G, u: U) -> Iter<'g, G, NestedIter<T, U>> {
         Iter {
             count: Visit::zero(),
             grid,
-            t: NestedIter::new(self.t, u), // _phantom: PhantomData,
+            t: NestedIter::new(self.t, u),
         }
     }
     pub fn iter(self) -> Iter<'g, G, NestedIter<T, Ident>> {
@@ -40,7 +38,7 @@ impl<'g, G: Grid, T: Transform> Iter<'g, G, T> {
     {
         let g = self.grid;
         let (rows, cols) = g.dimensions();
-        self.nest(g, Nw::new(rows, cols, G::major_order_fn()))
+        self.nest(g, Nw::new(rows, cols, G::major_order_fn(Ordinal::Nw)))
     }
     pub fn ne(self) -> Iter<'g, G, NestedIter<T, Ne<RowMajor>>>
     where
@@ -48,7 +46,7 @@ impl<'g, G: Grid, T: Transform> Iter<'g, G, T> {
     {
         let g = self.grid;
         let (rows, cols) = g.dimensions();
-        self.nest(g, Ne::new(rows, cols, G::major_order_fn()))
+        self.nest(g, Ne::new(rows, cols, G::major_order_fn(Ordinal::Ne)))
     }
     pub fn se(self) -> Iter<'g, G, NestedIter<T, Se<RowMajor>>>
     where
@@ -56,7 +54,7 @@ impl<'g, G: Grid, T: Transform> Iter<'g, G, T> {
     {
         let g = self.grid;
         let (rows, cols) = g.dimensions();
-        self.nest(g, Se::new(rows, cols, G::major_order_fn()))
+        self.nest(g, Se::new(rows, cols, G::major_order_fn(Ordinal::Se)))
     }
     pub fn sw(self) -> Iter<'g, G, NestedIter<T, Sw<RowMajor>>>
     where
@@ -64,7 +62,7 @@ impl<'g, G: Grid, T: Transform> Iter<'g, G, T> {
     {
         let g = self.grid;
         let (rows, cols) = g.dimensions();
-        self.nest(g, Sw::new(rows, cols, G::major_order_fn()))
+        self.nest(g, Sw::new(rows, cols, G::major_order_fn(Ordinal::Sw)))
     }
 }
 impl<'g, G: Grid, T: Transform> Iterator for Iter<'g, G, T> {
