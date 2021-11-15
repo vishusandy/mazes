@@ -54,6 +54,8 @@ pub struct Block {
     sx: u32,
     sy: u32,
 }
+
+/// Abstraction for the rendering of an individual block using a given grid type.
 pub trait Renderable: Grid {
     fn render_block(
         &self,
@@ -81,6 +83,9 @@ pub trait Renderable: Grid {
     );
     fn image_dimensions(&self, opts: &BasicOpts) -> (u32, u32);
 }
+/// Abstraction of rendering options to be used with different rendering methods.
+/// E.g., a map of distances (from a given starting point) will require changing the text label
+/// and possibly the background color of a block (to visually show the distance).
 pub trait RenderOps {
     type G: Grid + Renderable;
     fn block_label(&self, id: Index) -> String;

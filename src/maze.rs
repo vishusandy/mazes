@@ -108,16 +108,16 @@ pub trait CardinalGrid: Grid {
             Ordinal::Sw => Self::calc_major_order_sw,
         }
     }
-    fn calc_major_order_nw<M: Major>(id: Visit, rows: RowSize, cols: ColSize, order: M) -> Index {
+    fn calc_major_order_nw<M: Major>(id: Visit, rows: RowSize, _cols: ColSize, order: M) -> Index {
         Ordinal::Nw.major_order_index(id, rows, order)
     }
-    fn calc_major_order_ne<M: Major>(id: Visit, rows: RowSize, cols: ColSize, order: M) -> Index {
+    fn calc_major_order_ne<M: Major>(id: Visit, rows: RowSize, _cols: ColSize, order: M) -> Index {
         Ordinal::Ne.major_order_index(id, rows, order)
     }
-    fn calc_major_order_se<M: Major>(id: Visit, rows: RowSize, cols: ColSize, order: M) -> Index {
+    fn calc_major_order_se<M: Major>(id: Visit, rows: RowSize, _cols: ColSize, order: M) -> Index {
         Ordinal::Se.major_order_index(id, rows, order)
     }
-    fn calc_major_order_sw<M: Major>(id: Visit, rows: RowSize, cols: ColSize, order: M) -> Index {
+    fn calc_major_order_sw<M: Major>(id: Visit, rows: RowSize, _cols: ColSize, order: M) -> Index {
         Ordinal::Sw.major_order_index(id, rows, order)
     }
     fn nw(&self) -> Iter<Self, Nw<RowMajor>>

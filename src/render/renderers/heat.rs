@@ -23,14 +23,29 @@ pub struct HeatMask {
     a: bool,
 }
 impl HeatMask {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn red(self, value: bool) -> Self {
+        Self { r: value, ..self }
+    }
     fn r(&self) -> u8 {
         self.r.into()
+    }
+    pub fn green(self, value: bool) -> Self {
+        Self { g: value, ..self }
     }
     fn g(&self) -> u8 {
         self.g.into()
     }
+    pub fn blue(self, value: bool) -> Self {
+        Self { b: value, ..self }
+    }
     fn b(&self) -> u8 {
         self.b.into()
+    }
+    pub fn alpha(self, value: bool) -> Self {
+        Self { a: value, ..self }
     }
     fn a(&self) -> u8 {
         self.b.into()

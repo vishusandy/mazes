@@ -31,7 +31,7 @@ impl<'f, 'g, G: Grid + Renderable> RenderOps for RenderGrid<'f, 'g, G> {
     fn block_label(&self, id: Index) -> String {
         id.to_string()
     }
-    fn block_bg(&self, id: Index) -> &Rgba<u8> {
+    fn block_bg(&self, _id: Index) -> &Rgba<u8> {
         self.opts.block_color()
     }
     fn render_grid(&self) -> RgbaImage {
