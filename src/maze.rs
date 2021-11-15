@@ -42,15 +42,19 @@ pub trait Grid: GridProps {
     {
         Rand::new(self, rng)
     }
+    /// Returns the first cell stored in the grid.
     fn first(&self) -> &<Self as GridProps>::C {
         &self.cells()[0]
     }
+    /// Returns the last cell stored in the grid.
     fn last(&self) -> &<Self as GridProps>::C {
         &self.cells()[self.capacity().minus(1)]
     }
+    /// Returns the nth cell in a grid.
     fn nth(&self, n: Index) -> &<Self as GridProps>::C {
         &self.cells()[*n]
     }
+    /// Attempts to get a given grid cell by `id`.
     fn get(&self, id: Index) -> Option<&<Self as GridProps>::C> {
         if *id < *self.capacity() {
             Some(&self.cells()[*id])
