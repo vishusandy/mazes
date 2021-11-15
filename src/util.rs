@@ -9,7 +9,7 @@ pub use capacity::Capacity;
 pub use cardinal::{Cardinal, CardinalIter, CardinalRev};
 pub use index::Index;
 use parse_display::{Display, FromStr};
-pub use row_size::RowSize;
+pub use row_size::{ColSize, RowSize};
 pub use visit::Visit;
 
 // todo: seal numerical

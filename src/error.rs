@@ -16,3 +16,7 @@ impl OutOfBoundsCoordError {
         Self(coord)
     }
 }
+
+#[derive(Error, Debug)]
+#[error("Could not save image {0}")]
+pub struct ImageSaveError<'p>(&'p std::path::PathBuf);

@@ -1,8 +1,86 @@
 use crate::maze::{CardinalGrid, Cell, Grid};
+use crate::trans::major::RowMajor;
 use crate::trans::*;
 use crate::util::*;
 use rand::Rng;
-use std::marker::PhantomData;
+
+pub struct Iter<'g, G: Grid, T: Transform> {
+    pub(in crate) grid: &'g G,
+    pub(in crate) count: Visit,
+    pub(in crate) t: T,
+    // pub(in crate) _phantom: std::marker::PhantomData<T>,
+}
+impl<'g, G: Grid, T: Transform> Iter<'g, G, T> {
+    pub(in crate) fn new(grid: &'g G, t: T) -> Iter<'g, G, T> {
+        Iter {
+            count: Visit::zero(),
+            grid,
+            t,
+            // _phantom: PhantomData,
+        }
+    }
+    pub(in crate) fn nest<U: Transform>(self, grid: &'g G, u: U) -> Iter<'g, G, NestedIter<T, U>> {
+        Iter {
+            count: Visit::zero(),
+            grid,
+            t: NestedIter::new(self.t, u), // _phantom: PhantomData,
+        }
+    }
+    pub fn iter(self) -> Iter<'g, G, NestedIter<T, Ident>> {
+        let g = self.grid;
+        self.nest(g, Ident)
+    }
+    pub fn reverse(self) -> Iter<'g, G, NestedIter<T, Rev>> {
+        let g = self.grid;
+        self.nest(g, Rev)
+    }
+    pub fn nw(self) -> Iter<'g, G, NestedIter<T, Nw<RowMajor>>>
+    where
+        G: Grid + CardinalGrid,
+    {
+        let g = self.grid;
+        let (rows, cols) = g.dimensions();
+        self.nest(g, Nw::new(rows, cols, G::major_order_fn()))
+    }
+    pub fn ne(self) -> Iter<'g, G, NestedIter<T, Ne<RowMajor>>>
+    where
+        G: Grid + CardinalGrid,
+    {
+        let g = self.grid;
+        let (rows, cols) = g.dimensions();
+        self.nest(g, Ne::new(rows, cols, G::major_order_fn()))
+    }
+    pub fn se(self) -> Iter<'g, G, NestedIter<T, Se<RowMajor>>>
+    where
+        G: Grid + CardinalGrid,
+    {
+        let g = self.grid;
+        let (rows, cols) = g.dimensions();
+        self.nest(g, Se::new(rows, cols, G::major_order_fn()))
+    }
+    pub fn sw(self) -> Iter<'g, G, NestedIter<T, Sw<RowMajor>>>
+    where
+        G: Grid + CardinalGrid,
+    {
+        let g = self.grid;
+        let (rows, cols) = g.dimensions();
+        self.nest(g, Sw::new(rows, cols, G::major_order_fn()))
+    }
+}
+impl<'g, G: Grid, T: Transform> Iterator for Iter<'g, G, T> {
+    type Item = &'g G::C;
+    fn next(&mut self) -> Option<Self::Item> {
+        if *self.count == *self.grid.capacity() {
+            self.count = Visit::zero();
+            None
+        } else {
+            let count = *self.count;
+            self.count = self.count.plus(1).into();
+            let id = self.t.transform(count, self.grid);
+            Some(self.grid.lookup(id.into()))
+        }
+    }
+}
 
 pub struct Rand<'g, 'r, R: Rng + ?Sized, G: Grid> {
     rng: &'r mut R,
@@ -56,76 +134,11 @@ impl<'g, 'r, R: Rng + ?Sized, G: Grid> Iterator for Rand<'g, 'r, R, G> {
     }
 }
 
-pub struct Iter<'g, G: Grid, T: Transform> {
-    pub(in crate) grid: &'g G,
-    pub(in crate) count: Visit,
-    pub(in crate) _phantom: std::marker::PhantomData<T>,
-}
-impl<'g, G: Grid, T: Transform> Iter<'g, G, T> {
-    pub(in crate) fn new(grid: &'g G) -> Iter<'g, G, T> {
-        Iter {
-            count: Visit::zero(),
-            grid,
-            _phantom: PhantomData,
-        }
-    }
-    pub(in crate) fn nest<U: Transform>(grid: &'g G) -> Iter<'g, G, NestedIter<T, U>> {
-        Iter {
-            count: Visit::zero(),
-            grid,
-            _phantom: PhantomData,
-        }
-    }
-    pub fn iter(&'g self) -> Iter<'g, G, NestedIter<T, Ident>> {
-        Self::nest(self.grid)
-    }
-    pub fn reverse(&'g self) -> Iter<'g, G, NestedIter<T, Rev>> {
-        Self::nest(self.grid)
-    }
-    pub fn nw(&'g self) -> Iter<'g, G, NestedIter<T, Nw>>
-    where
-        G: Grid + CardinalGrid,
-    {
-        Self::nest(self.grid)
-    }
-    pub fn ne(&'g self) -> Iter<'g, G, NestedIter<T, Ne>>
-    where
-        G: Grid + CardinalGrid,
-    {
-        Self::nest(self.grid)
-    }
-    pub fn se(&'g self) -> Iter<'g, G, NestedIter<T, Se>>
-    where
-        G: Grid + CardinalGrid,
-    {
-        Self::nest(self.grid)
-    }
-    pub fn sw(&'g self) -> Iter<'g, G, NestedIter<T, Sw>>
-    where
-        G: Grid + CardinalGrid,
-    {
-        Self::nest(self.grid)
-    }
-}
-impl<'g, G: Grid, T: Transform> Iterator for Iter<'g, G, T> {
-    type Item = &'g G::C;
-    fn next(&mut self) -> Option<Self::Item> {
-        if *self.count == *self.grid.capacity() {
-            self.count = Visit::zero();
-            None
-        } else {
-            let count = *self.count;
-            self.count = self.count.plus(1).into();
-            let id = T::transform(count, self.grid);
-            Some(self.grid.lookup(id.into()))
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::maze::sq::SqGrid;
-    use crate::maze::{Cell, Grid, GridProps};
+    use crate::*;
+    // use crate::maze::{CardinalGrid, Cell, Grid, GridProps};
     use crate::util::Index;
     use rand::SeedableRng;
     use rand_xoshiro::SplitMix64;

@@ -6,6 +6,8 @@ use std::ops::{
     Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Sub, SubAssign,
 };
 
+pub type ColSize = RowSize;
+
 #[derive(Clone, Copy, Debug, Display, Hash, Eq, PartialEq, PartialOrd, Ord)]
 pub struct RowSize(pub(in crate::util) usize);
 impl Numerical for RowSize {
