@@ -20,18 +20,22 @@ pub trait Grid: GridProps {
             Err(OutOfBoundsError::new(id))
         }
     }
+    /// Produces an [`Iter`] to iterate the grid using the [`Ident`] transform, which does
+    /// not change iteration order while still allowing [`Iter`] to be generic over `T: Transform`.
     fn iter(&self) -> Iter<Self, Ident>
     where
         Self: Sized + Grid,
     {
         Iter::new(self, Ident)
     }
+    /// Produces a [`Rev`] iterator to reverse the direction of iteration.
     fn reverse(&self) -> Iter<Self, Rev>
     where
         Self: Sized + Grid,
     {
         Iter::new(self, Rev)
     }
+    /// Produces a [`Rand`] iterator to randomly iterate a grid.
     fn rand<'g, 'r, R: rand::Rng + Sized>(&'g self, rng: &'r mut R) -> Rand<'g, 'r, R, Self>
     where
         Self: Sized + Grid,
@@ -61,9 +65,11 @@ pub trait Grid: GridProps {
 /// `Cell` is intentionally very simple to allow more flexibility in regards to grid types.
 pub trait Cell {
     fn id(&self) -> Index;
+    /// List cells that are near the current cell, without regards to whether they are linked.
     fn neighbor_ids(&self) -> &[Index];
+    /// Link a cell with another cell
     fn link<T: Grid>(&mut self, with: Index, grid: &T) -> Result<(), OutOfBoundsError>;
-    // fn links(&self) -> &[RefCell<Index>];
+    // Return ids of neighboring cells linked with the current cell.
     fn links(&self) -> &RefCell<Vec<Index>>;
 }
 
