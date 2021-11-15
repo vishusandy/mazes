@@ -2,6 +2,12 @@ use crate::render::DEJAVU_BYTES;
 use image::{Rgba, RgbaImage};
 use rusttype::Font;
 #[derive(Clone, Debug)]
+/// If resizing the image is desired [`ScaleImage`] will resize the image using
+/// with a given scaling factor (an `f32`) and
+/// [`image::imageops::FilterType`](https://docs.rs/image/latest/image/imageops/enum.FilterType.html).
+///
+/// For more information see
+/// [`image::imageops::resize()`](https://docs.rs/image/latest/image/imageops/fn.resize.html)
 pub enum ScaleImage {
     Triangle(f32),
     CatmullRom(f32),
@@ -11,6 +17,9 @@ pub enum ScaleImage {
 }
 use image::imageops::{resize, FilterType};
 impl ScaleImage {
+    /// Calls [`image::imageops::resize()`](https://docs.rs/image/latest/image/imageops/fn.resize.html)
+    /// with a given scaling factor and
+    /// [`image::imageops::FilterType`](https://docs.rs/image/latest/image/imageops/enum.FilterType.html).
     pub(in crate) fn scale(&self, image: &RgbaImage) -> RgbaImage {
         let scale_with = |s: f32, f: FilterType| -> RgbaImage {
             let h = ((image.height() as f32) * s) as u32;
@@ -25,39 +34,72 @@ impl ScaleImage {
             Self::None => image.clone(),
         }
     }
+    /// Use the highest quality, and slowest, resizing algorithm
     pub fn high_quality(scale: f32) -> Self {
         Self::Lanczos3(scale)
     }
+    /// Use a medium quality resizing algorithm with decent performance.
     pub fn medium_quality(scale: f32) -> Self {
         Self::CatmullRom(scale)
     }
 }
 #[derive(Clone, Debug)]
 pub struct BasicOpts<'f> {
-    /// Background color of the grid (inside of frame)
+    /// Background color of the grid (inside of frame).
     bg_color: Rgba<u8>,
     /// Not sure if this will be used yet :/
     fg_color: Rgba<u8>,
-    /// Color of joint intersections (if `show_joints` is `true`)
+    /// Color of joint intersections (if `show_joints` is `true`).
     joint_color: Rgba<u8>,
-    /// Text color fof the labels
+    /// Text color fof the labels.
     label_color: Rgba<u8>,
+    /// Color for the image frame.
     frame_color: Rgba<u8>,
+    /// The default background color for grid blocks.
     block_color: Rgba<u8>,
+    /// The color of a block's borders.
     border_color: Rgba<u8>,
+    /// How much padding should be added around the grid.
+    /// This is used to increase visibility of the outside grid borders, which may be hard to see
+    /// when using an image viewer with a background color similar to the border color.
     frame_size: u32,
+    /// The default size for each block.  For non-square cells this will be used to scale the block
+    /// to ensure the cell is no larger than the given value.
     block_size: u32,
     /// Block padding applies to joints, arrows, and text.  Does not apply to borders.
     block_padding: u32,
+    /// The size of each section of a joint.  The actual size of each joint will be double this value.
     joint_size: u32,
+    /// Whether to draw joints or not
     show_joints: bool,
+    /// Whether to draw text labels or not
     text_labels: bool,
+    /// Whether to center text or not.  If this is `true` then `label_offset` will be not used.
     center_labels: bool,
+    /// If `center_labels` is `false` then use this offset to calculate the position of the text.
     label_offset: u32,
+    /// Font to use when rendering text labels.
+    ///
+    /// See [rusttype](https://docs.rs/crate/rusttype) for more information.
     font: Font<'f>,
+    /// This determines the size of the font when rendering.  See [rusttype] for more information.
     font_size: f32,
+    /// This determines the horizontal scaling of the rendered font.
+    ///
+    /// For more information see
+    /// [rusttype::Scale](https://docs.rs/rusttype/latest/rusttype/struct.Scale.html).
     font_x: f32,
+    /// This determines the vertical scaling of the rendered font.  
+    ///
+    /// For more information see
+    /// [rusttype::Scale](https://docs.rs/rusttype/latest/rusttype/struct.Scale.html).
     font_y: f32,
+    /// If resizing the image is desired [`ScaleImage`] will resize the image using
+    /// with a given scaling factor and
+    /// [`image::imageops::FilterType`](https://docs.rs/image/latest/image/imageops/enum.FilterType.html).
+    ///
+    /// For more information see
+    /// [`image::imageops::resize()`](https://docs.rs/image/latest/image/imageops/fn.resize.html)
     scale_image: Option<ScaleImage>,
 }
 impl<'f> Default for BasicOpts<'f> {
@@ -87,6 +129,7 @@ impl<'f> Default for BasicOpts<'f> {
     }
 }
 impl<'f> BasicOpts<'f> {
+    /// Settings to use when debugging a renderer (e.g., to more easily see if borders and joints are properly drawn)
     pub fn debug() -> Self {
         Self {
             bg_color: Rgba([255u8, 255u8, 255u8, 255u8]),
