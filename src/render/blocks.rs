@@ -193,15 +193,15 @@ impl UnsignedIntBlock {
     pub(in crate) fn center_y(&self, opts: &BasicOpts) -> u32 {
         self.y1 + opts.border_width() / 2
     }
-    /// Center of a block.  This will subtract `border_width` to return a 'visual center'.
-    ///
+    // Returns the center of a block (`border_width` is not included).
     pub(in crate) fn center(&self, opts: &BasicOpts) -> (u32, u32) {
-        (
-            // ((self.x1 + opts.block_size() / 2) as i32) as u32,
-            // ((self.y1 + opts.block_size() / 2) as i32) as u32,
-            (self.center_x(opts), self.center_y(opts))
-        )
+        (self.center_x(opts), self.center_y(opts))
     }
+    /// Calculate where to place text when `center_labels = true` in order for the text to appear
+    /// in the visual center of the block.
+    ///
+    /// This will apply the `label_offset` and subtract `font_size / 2` which will return the
+    /// approximate position for text for it to appear centered.
     pub(in crate) fn text_center(&self, opts: &BasicOpts) -> (u32, u32) {
         let offset = opts.label_offset() - (opts.font_size() as i32 / 2);
         (

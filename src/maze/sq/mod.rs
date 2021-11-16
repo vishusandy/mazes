@@ -241,16 +241,13 @@ impl Renderable for SqGrid {
         let scale = opts.font_scale();
         let x: u32;
         let y: u32;
-        // let offset = opts.label_offset();
-        // let offset = opts.label_offset() - opts.border_width() as i32;
-        let offset = 0;
         if opts.center_labels() {
             let center = block.text_center(opts);
-            x = (center.0 as i32 + offset) as u32;
-            y = (center.1 as i32 + offset) as u32;
+            x = center.0;
+            y = center.1;
         } else {
-            x = (block.x1 as i32 + offset) as u32;
-            y = (block.y1 as i32 + offset) as u32;
+            x = block.x1 + opts.block_padding();
+            y = block.y1 + opts.block_padding();
         }
         draw_text_mut(image, *color, x, y, scale, opts.font(), text);
     }
@@ -287,12 +284,7 @@ mod tests {
         let file = "grid_opts.png";
         let path = Path::new(file);
         let mut options = BasicOpts::debug();
-        options.set_show_joints(true);
-        options.set_frame_size(20);
-        options.set_center_labels(true);
-        options.set_frame_color(Rgba([0, 0, 255, 255]));
-        options.set_border_width(15);
-        // options.set_label_offset(0);
+        options.set_center_labels(false);
         grid.render_options(&options).save_render(path)?;
         if !path.exists() {
             panic!("Render failed - image '{}' was not created", file);
