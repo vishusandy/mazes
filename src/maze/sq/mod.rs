@@ -115,7 +115,6 @@ impl SqGrid {
         let corner = block.corner(d);
         let x = d.side_x();
         let y = d.side_y();
-        // let i = 0;
         let add_x = |x: f32, offset: f32, ax: &Horizontal| -> f32 {
             match ax {
                 Horizontal::W => x - offset,
@@ -135,9 +134,7 @@ impl SqGrid {
             let cx = add_x(corner.0, i as f32, &x);
             let cy = add_y(corner.1, i as f32, &y);
             //Horizontal joint line
-            // let line1 = ((cx, cy), (block.x_offset(pad + i, &x), cy));
             let line1 = ((cx, cy), (block.x_offset(pad, &x), cy));
-            // let line2 = ((cx, cy), (cx, block.y_offset(pad + i, &y)));
             // Vertical joint line
             let line2 = ((cx, cy), (cx, block.y_offset(pad, &y)));
             draw_line_segment_mut(image, line1.0, line1.1, *color);
@@ -244,9 +241,11 @@ impl Renderable for SqGrid {
         let scale = opts.font_scale();
         let x: u32;
         let y: u32;
-        let offset = opts.label_offset();
+        // let offset = opts.label_offset();
+        // let offset = opts.label_offset() - opts.border_width() as i32;
+        let offset = 0;
         if opts.center_labels() {
-            let center = block.center();
+            let center = block.text_center(opts);
             x = (center.0 as i32 + offset) as u32;
             y = (center.1 as i32 + offset) as u32;
         } else {
@@ -289,14 +288,16 @@ mod tests {
         let path = Path::new(file);
         let mut options = BasicOpts::debug();
         options.set_show_joints(true);
-        options.set_frame_size(5);
+        options.set_frame_size(20);
+        options.set_center_labels(true);
         options.set_frame_color(Rgba([0, 0, 255, 255]));
-        // options.set_joint_size(10);
-        options.set_border_width(10);
+        options.set_border_width(15);
+        // options.set_label_offset(0);
         grid.render_options(&options).save_render(path)?;
         if !path.exists() {
             panic!("Render failed - image '{}' was not created", file);
         }
         Ok(())
+        // panic!();
     }
 }

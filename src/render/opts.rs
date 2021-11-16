@@ -83,7 +83,10 @@ pub struct BasicOpts<'f> {
     text_labels: bool,
     /// Whether to center text or not.
     center_labels: bool,
-    /// An offset applied to the position of text labels
+    /// An offset applied to the x and y position of text labels.
+    ///
+    /// When using `center_labels=true` a good default value for `label_offset` is `-5`.
+    /// This value may need to be adjusted depending on the renderer, font scaling, and font size used.
     label_offset: i32,
     /// Font to use when rendering text labels.
     ///
@@ -152,6 +155,7 @@ impl<'f> BasicOpts<'f> {
             show_joints: true,
             text_labels: true,
             center_labels: true,
+            label_offset: 0,
             ..Self::default()
         }
     }

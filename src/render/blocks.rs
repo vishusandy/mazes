@@ -187,14 +187,27 @@ impl UnsignedIntBlock {
             ),
         }
     }
-    pub(in crate) fn center_x(&self) -> u32 {
-        (self.x1 + self.x2) / 2
+    pub(in crate) fn center_x(&self, opts: &BasicOpts) -> u32 {
+        self.x1 + opts.border_width() / 2
     }
-    pub(in crate) fn center_y(&self) -> u32 {
-        (self.y1 + self.y2) / 2
+    pub(in crate) fn center_y(&self, opts: &BasicOpts) -> u32 {
+        self.y1 + opts.border_width() / 2
     }
-    pub(in crate) fn center(&self) -> (u32, u32) {
-        (self.center_x(), self.center_y())
+    /// Center of a block.  This will subtract `border_width` to return a 'visual center'.
+    ///
+    pub(in crate) fn center(&self, opts: &BasicOpts) -> (u32, u32) {
+        (
+            // ((self.x1 + opts.block_size() / 2) as i32) as u32,
+            // ((self.y1 + opts.block_size() / 2) as i32) as u32,
+            (self.center_x(opts), self.center_y(opts))
+        )
+    }
+    pub(in crate) fn text_center(&self, opts: &BasicOpts) -> (u32, u32) {
+        let offset = opts.label_offset() - (opts.font_size() as i32 / 2);
+        (
+            ((self.x1 + opts.block_size() / 2) as i32 + offset) as u32,
+            ((self.y1 + opts.block_size() / 2) as i32 + offset) as u32,
+        )
     }
     pub(in crate) fn draw_line(
         &self,
