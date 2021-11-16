@@ -1,55 +1,45 @@
-use crate::maze::{Cell, Grid};
-use crate::render::{BasicOpts, RenderOps, Renderable, Renderer};
+use crate::maze::sq::SqGrid;
+use crate::maze::Grid;
+use crate::render::blocks::UnsignedIntBlock;
+use crate::render::{BasicOpts, Renderable, Renderer, RendererOps};
 use crate::util::Index;
-use image::{Rgba, RgbaImage};
+use std::borrow::Cow;
+
 #[derive(Clone, Debug)]
-pub struct RenderGrid<'f, 'g, G: Grid + Renderable> {
+pub struct RenderGrid<'f, 'o, 'g, G: Grid + Renderable> {
     grid: &'g G,
-    opts: BasicOpts<'f>,
+    opts: Cow<'o, BasicOpts<'f>>,
 }
-impl<'f, 'g, G: Grid + Renderable> Renderer<'f> for RenderGrid<'f, 'g, G> {}
-impl<'f, 'g, G: Grid + Renderable> RenderGrid<'f, 'g, G> {
-    pub(in crate) fn new(grid: &'g G) -> Self {
+// impl<'f, 'o, 'g, G: Grid + Renderable> Renderer<'f> for RenderGrid<'f, 'o, 'g, G> {}
+impl<'f, 'o, 'g> Renderer<'f> for RenderGrid<'f, 'o, 'g, SqGrid> {}
+// impl<'f, 'o, 'g, G: Grid + Renderable> RenderGrid<'f, 'o, 'g, G> {
+impl<'f, 'o, 'g> RenderGrid<'f, 'o, 'g, SqGrid> {
+    pub(in crate) fn new(grid: &'g SqGrid) -> Self {
         Self {
             grid,
-            opts: BasicOpts::default(),
+            opts: Cow::Owned(BasicOpts::default()),
         }
     }
-    pub(in crate) fn with_options(grid: &'g G, opts: BasicOpts<'f>) -> Self {
-        Self { grid, opts }
+    pub(in crate) fn with_options(grid: &'g SqGrid, opts: &'o BasicOpts<'f>) -> Self {
+        Self {
+            grid,
+            opts: Cow::Borrowed(opts),
+        }
     }
 }
-impl<'f, 'g, G: Grid + Renderable> RenderOps<'f> for RenderGrid<'f, 'g, G> {
-    type G = G;
+// impl<'f, 'o, 'g, G: Grid + Renderable> RendererOps<'f> for RenderGrid<'f, 'o, 'g, G> {
+impl<'f, 'o, 'g> RendererOps<'f> for RenderGrid<'f, 'o, 'g, SqGrid> {
+    type G = SqGrid;
     fn options<'a>(&'a self) -> &'a BasicOpts<'f> {
         &self.opts
     }
     fn options_mut<'a>(&'a mut self) -> &'a mut BasicOpts<'f> {
-        &mut self.opts
+        self.opts.to_mut()
     }
-    fn block_label(&self, id: Index) -> String {
-        id.to_string()
-    }
-    fn block_bg(&self, _id: Index) -> &Rgba<u8> {
-        self.opts.block_color()
-    }
-    fn render_grid(&self) -> RgbaImage {
-        let opts = self.options();
-        let (x, y) = self.grid().image_dimensions(opts);
-        let mut image = RgbaImage::from_pixel(x, y, *opts.bg_color());
-        for i in self.grid().iter() {
-            let id = i.id();
-            self.grid().render_block(
-                id,
-                &self.block_label(id),
-                self.block_bg(id),
-                &mut image,
-                opts,
-            );
-        }
-        image
-    }
-    fn grid(&self) -> &G {
+    fn grid(&self) -> &SqGrid {
         self.grid
+    }
+    fn block_coords(&self, id: Index) -> <Self::G as Renderable>::B {
+        UnsignedIntBlock::new(self.grid, id, &self.opts)
     }
 }

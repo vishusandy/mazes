@@ -48,7 +48,7 @@ pub trait Grid: GridProps {
     }
     /// Returns the last cell stored in the grid.
     fn last(&self) -> &<Self as GridProps>::C {
-        &self.cells()[self.capacity().minus(1)]
+        &self.cells()[self.capacity().minus(1usize)]
     }
     /// Returns the nth cell in a grid.
     fn nth(&self, n: Index) -> &<Self as GridProps>::C {
@@ -64,6 +64,16 @@ pub trait Grid: GridProps {
     }
 }
 
+/// Methods that rely on having access to the struct's fields.
+/// The `Grid` trait provides additional methods but is intended
+/// to be used generically and thus cannot access its data.
+pub trait GridProps {
+    type C: Cell;
+    fn setup(size: usize) -> Self;
+    fn capacity(&self) -> Capacity;
+    fn cells(&self) -> &Vec<Self::C>;
+}
+
 /// All cells in a grid must implement `Cell`.  This allows linking and navigation between cells.
 ///
 /// `Cell` is intentionally very simple to allow more flexibility in regards to grid types.
@@ -75,6 +85,9 @@ pub trait Cell {
     fn link<T: Grid>(&mut self, with: Index, grid: &T) -> Result<(), OutOfBoundsError>;
     // Return ids of neighboring cells linked with the current cell.
     fn links(&self) -> &RefCell<Vec<Index>>;
+    fn has_neighbor(&self, neighbor: Index) -> bool {
+        self.neighbor_ids().contains(&neighbor)
+    }
 }
 
 /// Any `Grid` type implementing `CoordLookup` can use `Coord` to lookup a cell's `Index`
@@ -83,16 +96,6 @@ pub trait CoordLookup: Grid {
     fn try_get_id(&self, coord: &Coord) -> Result<Index, OutOfBoundsCoordError>;
     fn get_coords(&self, id: Index) -> Coord;
     fn try_get_coords(&self, id: Index) -> Result<Coord, OutOfBoundsError>;
-}
-
-/// Methods that rely on having access to the struct's fields.
-/// The `Grid` trait provides additional methods but is intended
-/// to be used generically and thus cannot access its data.
-pub trait GridProps {
-    type C: Cell;
-    fn setup(size: usize) -> Self;
-    fn capacity(&self) -> Capacity;
-    fn cells(&self) -> &Vec<Self::C>;
 }
 
 /// Describes grids that can be navigated using cardinal directions.
@@ -172,7 +175,22 @@ pub trait CardinalGrid: Grid {
     fn has_boundary_west(&self, id: Index) -> bool {
         id.rem(self.row_size()) == 0
     }
-    fn calc_dir(&self, id: Index, dir: Cardinal) -> Option<Index> {
+    fn neighbor(&self, id: Index, d: &Cardinal) -> Option<Index> {
+        self.calc_dir(id, d)
+        // if let Some(n) = self.calc_dir(id, d) {
+        //     self.get(n).map(|c| c.id()).copied()
+        // } else {
+        //     None
+        // }
+        // self.calc_dir(id, d)
+        //     .map(|n| {
+        //         self.get(n)
+        //             .map(|c| if c.has_neighbor(n) { Some(n) } else { None })
+        //             .flatten()
+        //     })
+        //     .flatten()
+    }
+    fn calc_dir(&self, id: Index, dir: &Cardinal) -> Option<Index> {
         match dir {
             Cardinal::N => self.calc_north(id),
             Cardinal::E => self.calc_east(id),
@@ -207,8 +225,8 @@ pub trait CardinalGrid: Grid {
     fn corner_id(&self, dir: Ordinal) -> Index {
         match dir {
             Ordinal::Nw => 0,
-            Ordinal::Ne => self.row_size().minus(1),
-            Ordinal::Se => self.capacity().minus(1),
+            Ordinal::Ne => self.row_size().minus(1usize),
+            Ordinal::Se => self.capacity().minus(1usize),
             Ordinal::Sw => self.capacity().minus(self.row_size()),
         }
         .into()

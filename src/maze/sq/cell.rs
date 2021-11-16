@@ -3,7 +3,7 @@ use crate::maze::{Cell, Grid};
 use crate::util::*;
 use parse_display::Display;
 use std::cell::RefCell;
-#[derive(Debug, Display)]
+#[derive(Clone, Debug, Display)]
 #[display("Cell {id}")]
 // todo: impl PartialEq, PartialOrd, Add/Sub/Mul/Div/Rem/AddAssign/SubAssign/MulAssign/DivAssign/Deref
 pub struct SqCell {

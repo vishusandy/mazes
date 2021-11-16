@@ -3,7 +3,7 @@ pub use crate::util::index::Index;
 pub use crate::util::row_size::RowSize;
 use parse_display::{Display, FromStr};
 
-#[derive(Debug, Display, FromStr, Clone, Copy)]
+#[derive(Debug, Display, FromStr, Clone, Copy, PartialEq, Eq)]
 pub enum Cardinal {
     #[display("North")]
     N,
@@ -15,8 +15,31 @@ pub enum Cardinal {
     W,
 }
 impl Cardinal {
-    pub fn iter(&self) -> CardinalIter {
+    pub fn map<T, N, E, S, W>(&self, n: N, e: E, s: S, w: W) -> T
+    where
+        N: Fn() -> T,
+        E: Fn() -> T,
+        S: Fn() -> T,
+        W: Fn() -> T,
+    {
+        match self {
+            Self::N => n(),
+            Self::E => e(),
+            Self::S => s(),
+            Self::W => w(),
+        }
+    }
+    pub fn iter() -> CardinalIter {
+        CardinalIter::default()
+    }
+    pub fn rev() -> CardinalRev {
+        CardinalRev::default()
+    }
+    pub fn cw_iter(&self) -> CardinalIter {
         CardinalIter::new(self)
+    }
+    pub fn ccw_iter(&self) -> CardinalRev {
+        CardinalRev::new(self)
     }
     pub fn clockwise(&self) -> Self {
         match self {
@@ -60,6 +83,18 @@ impl Cardinal {
         let dirs = &['N', 'E', 'S', 'W'];
         Cardinal::from(dirs[rng.gen_range(0usize..4usize)])
     }
+    pub fn north(&self) -> bool {
+        matches!(self, Self::N)
+    }
+    pub fn east(&self) -> bool {
+        matches!(self, Self::E)
+    }
+    pub fn south(&self) -> bool {
+        matches!(self, Self::S)
+    }
+    pub fn west(&self) -> bool {
+        matches!(self, Self::W)
+    }
 }
 impl From<u8> for Cardinal {
     fn from(i: u8) -> Self {
@@ -87,6 +122,11 @@ impl From<char> for Cardinal {
         }
     }
 }
+impl From<Cardinal> for char {
+    fn from(c: Cardinal) -> Self {
+        c.char()
+    }
+}
 impl From<&str> for Cardinal {
     fn from(s: &str) -> Self {
         let s = s.to_lowercase();
@@ -103,6 +143,12 @@ impl From<&str> for Cardinal {
         }
     }
 }
+// impl std::ops::Add for Cardinal {
+//     type Output = Ordinal;
+//     fn add(self, rhs: Self) -> Self::Output {
+//         self.char()
+//     }
+// }
 impl std::ops::Neg for Cardinal {
     type Output = Self;
     /// Returns the opposite direction on the same axis (north => south, east => west)
@@ -119,7 +165,7 @@ impl IntoIterator for Cardinal {
     type Item = Cardinal;
     type IntoIter = CardinalIter;
     fn into_iter(self) -> Self::IntoIter {
-        self.iter()
+        self.cw_iter()
     }
 }
 #[derive(Clone, Debug)]

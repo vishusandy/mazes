@@ -144,6 +144,16 @@ impl From<Index> for RowSize {
         from.0.into()
     }
 }
+impl From<RowSize> for u32 {
+    fn from(from: RowSize) -> Self {
+        from.0 as u32
+    }
+}
+impl From<RowSize> for f32 {
+    fn from(from: RowSize) -> Self {
+        from.0 as f32
+    }
+}
 impl Deref for RowSize {
     type Target = usize;
     fn deref(&self) -> &Self::Target {

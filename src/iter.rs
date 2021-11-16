@@ -73,7 +73,7 @@ impl<'g, G: Grid, T: Transform> Iterator for Iter<'g, G, T> {
             None
         } else {
             let count = *self.count;
-            self.count = self.count.plus(1).into();
+            self.count = self.count.plus(1usize).into();
             let id = self.t.transform(count, self.grid);
             Some(self.grid.lookup(id.into()))
         }
@@ -125,7 +125,7 @@ impl<'g, 'r, R: Rng + ?Sized, G: Grid> Iterator for Rand<'g, 'r, R, G> {
             None
         } else {
             let count = *self.count;
-            self.count = self.count.plus(1).into();
+            self.count = self.count.plus(1usize).into();
             let id = self.shuffle[count];
             Some(self.grid.lookup(id))
         }

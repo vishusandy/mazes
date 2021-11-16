@@ -150,3 +150,18 @@ impl From<Visit> for Index {
         from.0.into()
     }
 }
+impl From<Index> for f32 {
+    fn from(from: Index) -> Self {
+        from.0 as f32
+    }
+}
+impl From<Index> for u32 {
+    fn from(from: Index) -> Self {
+        from.0 as u32
+    }
+}
+impl From<Index> for i32 {
+    fn from(from: Index) -> Self {
+        from.0 as i32
+    }
+}
