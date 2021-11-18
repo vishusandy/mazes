@@ -117,14 +117,14 @@ impl FloatBlock {
     pub(in crate) fn bottom_right(&self, offset_x: u32, offset_y: u32) -> (f32, f32) {
         (self.right(offset_x), self.top(offset_y))
     }
-    pub(in crate) fn center_x(&self) -> f32 {
-        (self.x1 + self.x2) / 2.0
+    pub(in crate) fn center_x(&self, opts: &BasicOpts) -> f32 {
+        self.x1 + (opts.block_size() as f32 / 2.0)
     }
-    pub(in crate) fn center_y(&self) -> f32 {
-        (self.y1 + self.y2) / 2.0
+    pub(in crate) fn center_y(&self, opts: &BasicOpts) -> f32 {
+        self.y1 + (opts.block_size() as f32 / 2.0)
     }
-    pub(in crate) fn center(&self) -> (f32, f32) {
-        (self.center_x(), self.center_y())
+    pub(in crate) fn center(&self, opts: &BasicOpts) -> (f32, f32) {
+        (self.center_x(opts), self.center_y(opts))
     }
     pub(in crate) fn side(&self, d: &Cardinal, offset: f32) -> ((f32, f32), (f32, f32)) {
         match d {
@@ -134,11 +134,6 @@ impl FloatBlock {
             Cardinal::W => ((self.x1 + offset, self.y1), (self.x1 + offset, self.y2)),
         }
     }
-    // fn top_center(&self) -> (f32, f32) {
-    // }
-    // fn tuple(&self) -> ((f32, f32), (f32, f32)) {
-    //     todo!()
-    // }
 }
 #[derive(Clone, Debug, Display)]
 #[display("(({x1},{y1}), ({x2},{y2}))")]
@@ -159,13 +154,9 @@ impl UnsignedIntBlock {
         let frame = opts.frame_size() as u32;
         let coords = grid.get_coords(id);
         let (col, row) = coords.unsigned_tuple();
-        // let x1 = col * (block + border) + border + frame;
         let x1 = col * (block + border) + border + frame;
-        // let y1 = row * (block + border) + border + frame;
         let y1 = row * (block + border) + border + frame;
-        // let x2 = x1 + block;
         let x2 = x1 + block + border - 1;
-        // let y2 = y1 + block;
         let y2 = y1 + block + border - 1;
         Self { x1, y1, x2, y2 }
     }
@@ -276,7 +267,6 @@ impl SignedIntBlock {
         opts: &BasicOpts,
         image: &mut RgbaImage,
     ) {
-        // let (cx, cy) = self.center(opts);
         let center = self.center(opts);
         let pt = self.cardinal_arrow_edge(dir, offset, center);
         draw_antialiased_line_segment_mut(image, center, pt, color, interpolate);
@@ -301,30 +291,10 @@ impl SignedIntBlock {
         let center = self.center(opts);
         let start = self.cardinal_arrow_edge(dir, offset, center);
         match dir {
-            Cardinal::N => (
-                sw(start, breadth, depth),
-                se(start, breadth, depth),
-                // down(left(start, breadth), depth),
-                // down(right(start, breadth), depth),
-            ),
-            Cardinal::E => (
-                nw(start, depth, breadth),
-                sw(start, depth, breadth),
-                // left(up(start, breadth), depth),
-                // left(down(start, breadth), depth),
-            ),
-            Cardinal::S => (
-                nw(start, breadth, depth),
-                ne(start, breadth, depth),
-                // up(left(start, breadth), depth),
-                // up(right(start, breadth), depth),
-            ),
-            Cardinal::W => (
-                ne(start, depth, breadth),
-                se(start, depth, breadth),
-                // right(up(start, breadth), depth),
-                // right(down(start, breadth), depth),
-            ),
+            Cardinal::N => (sw(start, breadth, depth), se(start, breadth, depth)),
+            Cardinal::E => (nw(start, depth, breadth), sw(start, depth, breadth)),
+            Cardinal::S => (nw(start, breadth, depth), ne(start, breadth, depth)),
+            Cardinal::W => (ne(start, depth, breadth), se(start, depth, breadth)),
         }
     }
     pub fn draw_cardinal_arrow_tip(

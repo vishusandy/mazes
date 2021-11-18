@@ -1,17 +1,12 @@
 use crate::maze::sq::SqGrid;
-use crate::maze::{CardinalGrid, Grid};
+use crate::maze::Grid;
 use crate::render::blocks::{SignedIntBlock, UnsignedIntBlock};
 use crate::render::renderers::dist_map::{calc_bg, DistMask};
 use crate::render::{BasicOpts, Renderable, Renderer, RendererOps};
-use crate::util::dist::Distances;
 use crate::util::path::Path;
-use crate::util::{Cardinal, Index};
-use either::Either;
+use crate::util::Index;
 use image::{Rgba, RgbaImage};
-use imageproc::drawing::draw_antialiased_line_segment_mut;
-use log::trace;
 use std::borrow::Cow;
-use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub struct PathMapRenderer<'f, 'g, 'p, G: Grid + Renderable + Clone> {

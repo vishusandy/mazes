@@ -282,7 +282,7 @@ pub(in crate) mod tests {
     use super::*;
     use crate::maze::sq::SqGrid;
     use crate::maze::Grid;
-    use crate::render::{Renderable, Renderer, RendererOps};
+    use crate::render::Renderer;
     use std::path::Path;
     pub(in crate) fn new_maze(size: usize) -> SqGrid {
         let grid = SqGrid::new(size);

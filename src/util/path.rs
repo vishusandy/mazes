@@ -1,10 +1,8 @@
 use crate::maze::sq::SqGrid;
 use crate::maze::CardinalGrid;
 use crate::maze::Grid;
-use crate::render::renderers::DistMapRenderer;
 use crate::render::renderers::{PathMapOpts, PathMapRenderer};
-use crate::render::{BasicOpts, Renderable};
-use crate::util::dist::Distances;
+use crate::render::BasicOpts;
 use crate::util::{Cardinal, Index};
 use std::collections::HashMap;
 
@@ -83,18 +81,6 @@ impl<'g, G: Grid> Path<'g, G> {
 }
 impl<'g, G: Grid + CardinalGrid> Path<'g, G> {
     pub fn prev_dir(&self, id: Index) -> Option<Cardinal> {
-        // println!("id={}", id);
-        // if let Some(prev) = self.prev(id) {
-        //     if let Some(dir) = self.grid.dir_from(id, prev) {
-        //         println!("\tprev_id={} prev_dir={}", prev, dir);
-        //         Some(dir)
-        //     } else {
-        //         println!("\tboundary fallback: {:?}", self.grid.find_boundary(id));
-        //         self.grid.find_boundary(id)
-        //     }
-        // } else {
-        //     None
-        // }
         self.prev(id)
             .map(|a| self.grid.dir_from(id, a))
             .flatten()

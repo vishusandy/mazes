@@ -94,7 +94,17 @@ pub struct DistMask {
     r: bool,
     g: bool,
     b: bool,
-    a: bool,
+    a: u8,
+}
+impl Default for DistMask {
+    fn default() -> Self {
+        Self {
+            r: true,
+            g: false,
+            b: false,
+            a: 255,
+        }
+    }
 }
 impl DistMask {
     pub fn new() -> Self {
@@ -105,10 +115,10 @@ impl DistMask {
             r: false,
             g: false,
             b: false,
-            a: false,
+            a: 255,
         }
     }
-    pub fn tuple(&self) -> (f32, f32, f32, f32) {
+    pub fn tuple(&self) -> (f32, f32, f32, u8) {
         (self.r(), self.g(), self.b(), self.a())
     }
     /// Turn on or off the red channel
@@ -153,45 +163,27 @@ impl DistMask {
     fn b(&self) -> f32 {
         u8::from(self.b).into()
     }
-    /// Turn on or off the alpha channel
-    pub fn use_alpha(&mut self, value: bool) {
+    /// Specify an alpha channel value
+    pub fn set_alpha(&mut self, value: u8) {
         self.a = value;
     }
-    pub fn only_alpha() -> Self {
-        Self {
-            a: true,
-            ..Self::none()
-        }
-    }
-    /// Get the value of the alpha channel as a f32 (as f32 will be used for calculations).
-    fn a(&self) -> f32 {
-        u8::from(self.b).into()
+    /// Get the value of the alpha channel
+    fn a(&self) -> u8 {
+        self.a
     }
 }
-impl Default for DistMask {
-    fn default() -> Self {
-        Self {
-            r: true,
-            g: false,
-            b: false,
-            a: false,
-        }
-    }
-}
-pub enum RgbaChannel {
+pub enum RgbChannel {
     R,
     G,
     B,
-    A,
 }
-impl std::ops::Index<RgbaChannel> for DistMask {
+impl std::ops::Index<RgbChannel> for DistMask {
     type Output = bool;
-    fn index(&self, index: RgbaChannel) -> &Self::Output {
+    fn index(&self, index: RgbChannel) -> &Self::Output {
         match index {
-            RgbaChannel::R => &self.r,
-            RgbaChannel::G => &self.g,
-            RgbaChannel::B => &self.b,
-            RgbaChannel::A => &self.a,
+            RgbChannel::R => &self.r,
+            RgbChannel::G => &self.g,
+            RgbChannel::B => &self.b,
         }
     }
 }
@@ -219,7 +211,7 @@ pub(in crate) fn calc_bg(dist: usize, max: f32, mask: &DistMask) -> Rgba<u8> {
     let (r, g, b, a) = mask.tuple();
     let i = (max - dist as f32) / max;
     let calc = |c: f32| -> u8 { ((255f32 - c * 127.0) * i + c * 127.0) as u8 };
-    Rgba([calc(r), calc(g), calc(b), 255])
+    Rgba([calc(r), calc(g), calc(b), a])
 }
 
 #[cfg(test)]
@@ -235,22 +227,24 @@ mod tests {
         new_maze(5).render_defaults().save_render(path)
     }
     #[test]
+    fn dist_map_renderer_defaults() -> Result<(), image::ImageError> {
+        new_maze(5)
+            .distances(Index::zero())
+            .render_defaults()
+            .save_render(std::path::Path::new("sq_distances.png"))
+    }
+    #[test]
     fn dist_renderer() -> Result<(), image::ImageError> {
         let basic = BasicOpts::default();
+        let mut mask = DistMask::only_blue();
+        mask.set_alpha(127);
         let dist_opts = DistMapOpts {
-            mask: DistMask::only_blue(),
+            mask,
             text: DistText::id(),
         };
         new_maze(5)
             .distances(Index::zero())
             .render_options(Some(basic), Some(dist_opts))
             .save_render(std::path::Path::new("sq_distances_options.png"))
-    }
-    #[test]
-    fn dist_map_renderer_defaults() -> Result<(), image::ImageError> {
-        new_maze(5)
-            .distances(Index::zero())
-            .render_defaults()
-            .save_render(std::path::Path::new("sq_distances.png"))
     }
 }

@@ -1,5 +1,4 @@
-use crate::error::OutOfBoundsError;
-use crate::maze::{Cell, Grid};
+use crate::maze::Cell;
 use crate::util::*;
 use parse_display::Display;
 use std::cell::RefCell;
@@ -30,16 +29,6 @@ impl Cell for SqCell {
     fn unchecked_link(&self, with: Index) {
         self.links.borrow_mut().push(with);
     }
-    // fn link<T: Grid>(&self, with: Index, grid: &T) -> Result<(), OutOfBoundsError> {
-    //     match grid.try_lookup(with) {
-    //         Ok(neighbor) => {
-    //             self.links().borrow_mut().push(neighbor.id());
-    //             neighbor.links().borrow_mut().push(self.id());
-    //             Ok(())
-    //         }
-    //         Err(err) => Err(err),
-    //     }
-    // }
     fn links(&self) -> &RefCell<Vec<Index>> {
         &self.links
     }

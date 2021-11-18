@@ -22,8 +22,6 @@ where
         Self {
             grid,
             root: start,
-            // map: HashMap::new(),
-            // map: HashMap::from([(start, 0)]),
             map,
         }
     }
@@ -100,8 +98,8 @@ impl<'g, G: Grid> std::ops::IndexMut<Index> for Distances<'g, G> {
 
 #[cfg(test)]
 mod tests {
-    use crate::maze::sq::tests::new_maze;
-    use crate::maze::Grid;
-    use crate::render::Renderer;
-    use crate::util::Index;
+    // use crate::maze::sq::tests::new_maze;
+    // use crate::maze::Grid;
+    // use crate::render::Renderer;
+    // use crate::util::Index;
 }
