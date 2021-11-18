@@ -211,28 +211,14 @@ pub trait CardinalGrid: Grid {
             run.push(id);
             let flip: bool = rng.gen();
             if grid.has_boundary_east(id) || (!grid.has_boundary_south(id) && !flip) {
-                // close run, carve south
                 let run_id = *run.choose(rng).unwrap();
                 if let Some(n) = grid.neighbor(run_id, &Cardinal::S) {
                     grid.link(run_id, n).unwrap();
                     run.truncate(0);
                 }
-            } else {
-                if let Some(n) = grid.neighbor(cell.id(), &Cardinal::E) {
-                    grid.link(id, n).unwrap();
-                }
+            } else if let Some(n) = grid.neighbor(cell.id(), &Cardinal::E) {
+                grid.link(id, n).unwrap();
             }
-            // if grid.has_boundary_east(id)
-            // let close_out = grid.has_boundary_east(id) || (!grid.has_boundary_south(id) && !flip);
-            // if close_out {
-            //     let run_id = run.choose(rng).unwrap();
-            //     let south = grid.neighbor(*run_id, &Cardinal::S).unwrap();
-            //     grid.link(*run_id, south).unwrap();
-            //     run.truncate(0);
-            // } else {
-            //     let east = grid.neighbor(cell.id(), &Cardinal::E).unwrap();
-            //     grid.link(id, east).unwrap();
-            // }
         }
         grid
     }
@@ -247,17 +233,17 @@ mod tests {
     use rand::SeedableRng;
     use rand_xoshiro::SplitMix64;
     #[test]
-    fn binary_tree() {
+    fn binary_tree() -> Result<(), image::ImageError> {
         let mut rng = SplitMix64::seed_from_u64(80);
         let grid = SqGrid::binary_tree(5, &mut rng);
         grid.render_defaults()
-            .save_render(std::path::Path::new("binary_tree.png"));
+            .save_render(std::path::Path::new("binary_tree.png"))
     }
     #[test]
-    fn sidewinder() {
+    fn sidewinder() -> Result<(), image::ImageError> {
         let mut rng = SplitMix64::seed_from_u64(583);
         let grid = SqGrid::sidewinder(10, &mut rng);
         grid.render_defaults()
-            .save_render(std::path::Path::new("sidwinder.png"));
+            .save_render(std::path::Path::new("sidwinder.png"))
     }
 }
