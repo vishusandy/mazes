@@ -32,4 +32,8 @@ impl Cell for SqCell {
     fn links(&self) -> &RefCell<Vec<Index>> {
         &self.links
     }
+    fn unchecked_unlink(&self, with: Index) {
+        let pos = self.links.borrow().iter().position(|n| *n == with);
+        // self.links.borrow_mut().remove()
+    }
 }

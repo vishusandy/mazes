@@ -26,12 +26,23 @@ pub trait Grid: GridProps {
     fn link(&self, a: Index, b: Index) -> Result<(), CellLinkError> {
         let cell_a = self
             .get(a)
-            .ok_or_else(|| CellLinkError::new(a, b, "`a` could not be retrieved"))?;
+            .ok_or_else(|| CellLinkError::new(a, b, "Link failed - `a` could not be retrieved"))?;
         let cell_b = self
             .get(b)
-            .ok_or_else(|| CellLinkError::new(a, b, "`a` could not be retrieved"))?;
+            .ok_or_else(|| CellLinkError::new(a, b, "Link failed - `b` could not be retrieved"))?;
         cell_a.unchecked_link(b);
         cell_b.unchecked_link(a);
+        Ok(())
+    }
+    fn unlink(&self, a: Index, b: Index) -> Result<(), CellLinkError> {
+        let cell_a = self
+            .get(a)
+            .ok_or_else(|| CellLinkError::new(a, b, "Unlink failed - `a` not found"))?;
+        let cell_b = self
+            .get(b)
+            .ok_or_else(|| CellLinkError::new(a, b, "Unlink failed - `b` not found"))?;
+        cell_a.unchecked_unlink(b);
+        cell_b.unchecked_unlink(a);
         Ok(())
     }
     /// Produces an [`Iter`] to iterate the grid using the [`Ident`] transform, which does
@@ -128,9 +139,13 @@ pub trait Cell {
     fn unchecked_link(&self, with: Index);
     // Return ids of neighboring cells linked with the current cell.
     fn links(&self) -> &RefCell<Vec<Index>>;
+    fn has_link(&self, link: Index) -> bool {
+        self.links().borrow().contains(&link)
+    }
     fn has_neighbor(&self, neighbor: Index) -> bool {
         self.neighbor_ids().contains(&neighbor)
     }
+    fn unchecked_unlink(&self, with: Index);
 }
 
 /// Any `Grid` type implementing `CoordLookup` can use `Coord` to lookup a cell's `Index`

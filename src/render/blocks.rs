@@ -8,9 +8,7 @@ use imageproc::drawing::{draw_antialiased_line_segment_mut, draw_line_segment_mu
 use imageproc::pixelops::interpolate;
 use parse_display::Display;
 
-pub trait BlockCoords {
-    // fn new<G: Grid + Renderable>(grid: &G, id: Index, opts: &BasicOpts) -> Self;
-}
+pub trait BlockCoords {}
 impl BlockCoords for FloatBlock {}
 impl BlockCoords for UnsignedIntBlock {}
 impl BlockCoords for SignedIntBlock {}

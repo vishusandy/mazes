@@ -43,6 +43,20 @@ impl SqGrid {
         grid
     }
 }
+impl Grid for SqGrid {}
+
+impl GridProps for SqGrid {
+    type C = SqCell;
+    fn setup(size: usize) -> Self {
+        Self::new(size)
+    }
+    fn capacity(&self) -> Capacity {
+        self.size.cap()
+    }
+    fn cells(&self) -> &Vec<<Self as GridProps>::C> {
+        &self.cells
+    }
+}
 impl std::ops::Index<usize> for SqGrid {
     type Output = SqCell;
     fn index(&self, index: usize) -> &Self::Output {
@@ -56,6 +70,9 @@ impl std::ops::IndexMut<usize> for SqGrid {
 }
 impl CardinalGrid for SqGrid {
     fn row_size(&self) -> RowSize {
+        self.size
+    }
+    fn col_size(&self) -> ColSize {
         self.size
     }
     fn dimensions(&self) -> (RowSize, ColSize) {
@@ -87,20 +104,6 @@ impl CoordLookup for SqGrid {
         } else {
             Err(OutOfBoundsError::new(id))
         }
-    }
-}
-impl Grid for SqGrid {}
-
-impl GridProps for SqGrid {
-    type C = SqCell;
-    fn setup(size: usize) -> Self {
-        Self::new(size)
-    }
-    fn capacity(&self) -> Capacity {
-        self.size.cap()
-    }
-    fn cells(&self) -> &Vec<<Self as GridProps>::C> {
-        &self.cells
     }
 }
 

@@ -33,3 +33,16 @@ impl<'s> CellLinkError<'s> {
         Self { a, b, reason }
     }
 }
+
+#[derive(Error, Debug)]
+#[error("Error linking {a} and {t}: {reason}")]
+pub struct NotNeighborsError<'s, T: std::fmt::Display> {
+    a: Index,
+    t: T,
+    reason: &'s str,
+}
+impl<'s, T: std::fmt::Display> NotNeighborsError<'s, T> {
+    pub(in crate) fn new(a: Index, t: T, reason: &'s str) -> Self {
+        Self { a, t, reason }
+    }
+}
