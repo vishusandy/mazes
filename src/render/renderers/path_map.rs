@@ -84,6 +84,7 @@ impl<'f, 'g, 'p> RendererOps<'f> for PathMapRenderer<'f, 'g, 'p, SqGrid> {
                 &d,
                 self.path_opts.pad_start(),
                 self.path_opts.arrow_color(),
+                &self.basic_opts,
                 image,
             );
         }
@@ -92,8 +93,16 @@ impl<'f, 'g, 'p> RendererOps<'f> for PathMapRenderer<'f, 'g, 'p, SqGrid> {
                 &d,
                 self.path_opts.pad_end(),
                 self.path_opts.arrow_color(),
+                &self.basic_opts,
                 image,
             );
+            block.draw_cardinal_arrow_tip(
+                &d,
+                self.path_opts.arrow_color(),
+                &self.basic_opts,
+                &self.path_opts,
+                image,
+            )
         }
     }
 }
@@ -104,7 +113,6 @@ pub struct PathMapOpts {
     arrow_color: Rgba<u8>,
     pad_start: i32,
     pad_end: i32,
-    stroke_width: i32,
     /// The breadth, or width, of the arrow point
     breadth: i32,
     /// The depth, or length, of the arrow point
@@ -125,7 +133,6 @@ impl Default for PathMapOpts {
             arrow_color: Rgba([0, 0, 0, 255]),
             pad_start: 5,
             pad_end: 5,
-            stroke_width: 1,
             breadth: 5,
             depth: 5,
             show_outside_labels: false,
@@ -149,9 +156,6 @@ impl PathMapOpts {
     }
     pub fn pad_end(&self) -> i32 {
         self.pad_end
-    }
-    pub fn stroke_width(&self) -> i32 {
-        self.stroke_width
     }
     pub fn breadth(&self) -> i32 {
         self.breadth
@@ -179,9 +183,6 @@ impl PathMapOpts {
     }
     pub fn set_pad_end(&mut self, pad: i32) {
         self.pad_end = pad;
-    }
-    pub fn set_stroke_width(&mut self, width: i32) {
-        self.stroke_width = width;
     }
     pub fn set_breadth(&mut self, breadth: i32) {
         self.breadth = breadth;

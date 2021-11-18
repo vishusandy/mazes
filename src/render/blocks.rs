@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use crate::maze::{CoordLookup, Grid};
+use crate::render::renderers::path_map::PathMapOpts;
 use crate::render::{BasicOpts, Renderable};
 use crate::util::{Cardinal, Horizontal, Index, Ordinal, Vertical};
 use image::{Rgba, RgbaImage};
@@ -246,14 +247,14 @@ impl SignedIntBlock {
         let y2 = y1 + block;
         Self { x1, y1, x2, y2 }
     }
-    pub(in crate) fn center_x(&self) -> i32 {
-        (self.x1 + self.x2) / 2
+    pub(in crate) fn center_x(&self, opts: &BasicOpts) -> i32 {
+        self.x1 + (opts.block_size() as i32 / 2)
     }
-    pub(in crate) fn center_y(&self) -> i32 {
-        (self.y1 + self.y2) / 2
+    pub(in crate) fn center_y(&self, opts: &BasicOpts) -> i32 {
+        self.y1 + (opts.block_size() as i32 / 2)
     }
-    pub(in crate) fn center(&self) -> (i32, i32) {
-        (self.center_x(), self.center_y())
+    pub(in crate) fn center(&self, opts: &BasicOpts) -> (i32, i32) {
+        (self.center_x(opts), self.center_y(opts))
     }
     fn left_edge(&self) -> i32 {
         self.x1
@@ -272,17 +273,97 @@ impl SignedIntBlock {
         dir: &Cardinal,
         offset: i32,
         color: Rgba<u8>,
+        opts: &BasicOpts,
         image: &mut RgbaImage,
     ) {
-        let (cx, cy) = self.center();
-        let pt: (i32, i32) = match dir {
+        // let (cx, cy) = self.center(opts);
+        let center = self.center(opts);
+        let pt = self.cardinal_arrow_edge(dir, offset, center);
+        draw_antialiased_line_segment_mut(image, center, pt, color, interpolate);
+    }
+    fn cardinal_arrow_edge(&self, dir: &Cardinal, offset: i32, center: (i32, i32)) -> (i32, i32) {
+        let (cx, cy) = center;
+        match dir {
             Cardinal::N => (cx, self.top_edge() + offset),
             Cardinal::E => (self.right_edge() - offset, cy),
             Cardinal::S => (cx, self.bottom_edge() - offset),
             Cardinal::W => (self.left_edge() + offset, cy),
-        };
-        draw_antialiased_line_segment_mut(image, (cx, cy), pt, color, interpolate);
+        }
     }
+    fn cardinal_arrow_tip(
+        &self,
+        dir: &Cardinal,
+        breadth: i32,
+        depth: i32,
+        offset: i32,
+        opts: &BasicOpts,
+    ) -> ((i32, i32), (i32, i32)) {
+        let center = self.center(opts);
+        let start = self.cardinal_arrow_edge(dir, offset, center);
+        match dir {
+            Cardinal::N => (
+                sw(start, breadth, depth),
+                se(start, breadth, depth),
+                // down(left(start, breadth), depth),
+                // down(right(start, breadth), depth),
+            ),
+            Cardinal::E => (
+                nw(start, depth, breadth),
+                sw(start, depth, breadth),
+                // left(up(start, breadth), depth),
+                // left(down(start, breadth), depth),
+            ),
+            Cardinal::S => (
+                nw(start, breadth, depth),
+                ne(start, breadth, depth),
+                // up(left(start, breadth), depth),
+                // up(right(start, breadth), depth),
+            ),
+            Cardinal::W => (
+                ne(start, depth, breadth),
+                se(start, depth, breadth),
+                // right(up(start, breadth), depth),
+                // right(down(start, breadth), depth),
+            ),
+        }
+    }
+    pub fn draw_cardinal_arrow_tip(
+        &self,
+        dir: &Cardinal,
+        color: Rgba<u8>,
+        basic: &BasicOpts,
+        opts: &PathMapOpts,
+        image: &mut RgbaImage,
+    ) {
+        let start = self.cardinal_arrow_edge(dir, opts.pad_end(), self.center(basic));
+        let pt = self.cardinal_arrow_tip(dir, opts.breadth(), opts.depth(), opts.pad_end(), basic);
+        draw_antialiased_line_segment_mut(image, start, pt.0, color, interpolate);
+        draw_antialiased_line_segment_mut(image, start, pt.1, color, interpolate);
+    }
+}
+fn down(pt: (i32, i32), offset: i32) -> (i32, i32) {
+    (pt.0, pt.1 + offset)
+}
+fn up(pt: (i32, i32), offset: i32) -> (i32, i32) {
+    (pt.0, pt.1 - offset)
+}
+fn left(pt: (i32, i32), offset: i32) -> (i32, i32) {
+    (pt.0 - offset, pt.1)
+}
+fn right(pt: (i32, i32), offset: i32) -> (i32, i32) {
+    (pt.0 + offset, pt.1)
+}
+fn sw(start: (i32, i32), breadth: i32, depth: i32) -> (i32, i32) {
+    down(left(start, breadth), depth)
+}
+fn se(start: (i32, i32), breadth: i32, depth: i32) -> (i32, i32) {
+    down(right(start, breadth), depth)
+}
+fn nw(start: (i32, i32), breadth: i32, depth: i32) -> (i32, i32) {
+    up(left(start, breadth), depth)
+}
+fn ne(start: (i32, i32), breadth: i32, depth: i32) -> (i32, i32) {
+    up(right(start, breadth), depth)
 }
 
 impl From<&UnsignedIntBlock> for FloatBlock {
