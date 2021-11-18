@@ -67,6 +67,10 @@ pub struct BasicOpts<'f> {
     /// The default size for each block.  For non-square cells this will be used to scale the block
     /// to ensure the cell is no larger than the given value.
     block_size: u32,
+    /// When there is a passage between two cells the border between them is not drawn.  When this
+    /// is `false` this area is not filled in and will show the bg_color.  If this is `true` the
+    /// background fill is extended by `border_width` to ensure this gap is not shown.
+    fill_empty_passages: bool,
     /// Block padding applies to joints, arrows, and text.  Does not apply to borders.
     block_padding: u32,
     /// The length of each section of a joint.  The actual size of each joint will be double this value.
@@ -125,13 +129,14 @@ impl<'f> Default for BasicOpts<'f> {
             border_width: 1,
             frame_size: 40,
             block_size: 70,
+            fill_empty_passages: true,
             block_padding: 2,
             joint_size: 6,
             tri_joints: false,
             show_joints: true,
             text_labels: true,
             center_labels: true,
-            label_offset: 8,
+            label_offset: 0,
             font: Font::try_from_bytes(DEJAVU_BYTES).unwrap(),
             font_size: 15.2f32,
             font_x: 15.2f32,
@@ -155,6 +160,7 @@ impl<'f> BasicOpts<'f> {
             show_joints: true,
             joint_size: 10,
             block_size: 70,
+            fill_empty_passages: false,
             text_labels: true,
             center_labels: true,
             label_offset: 0,
@@ -190,6 +196,9 @@ impl<'f> BasicOpts<'f> {
     }
     pub fn block_size(&self) -> u32 {
         self.block_size
+    }
+    pub fn fill_empty_passages(&self) -> bool {
+        self.fill_empty_passages
     }
     pub fn block_padding(&self) -> u32 {
         self.block_padding
@@ -256,6 +265,9 @@ impl<'f> BasicOpts<'f> {
     }
     pub fn set_block_size(&mut self, size: u32) {
         self.block_size = size;
+    }
+    pub fn set_fill_empty_passages(&mut self, value: bool) {
+        self.fill_empty_passages = value;
     }
     pub fn set_block_padding(&mut self, size: u32) {
         self.block_padding = size;

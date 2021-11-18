@@ -133,6 +133,13 @@ pub trait RendererOps<'f> {
     fn block_bg(&self, _id: Index) -> Rgba<u8> {
         *self.options().block_color()
     }
+    fn render_extra(
+        &self,
+        _id: Index,
+        _block: &<Self::G as Renderable>::B,
+        _image: &mut RgbaImage,
+    ) {
+    }
     fn render_frame(&self) -> RgbaImage {
         let opts = self.options();
         let (x, y) = self.grid().image_dimensions(opts);
@@ -167,6 +174,7 @@ pub trait RendererOps<'f> {
                 image,
                 self.options(),
             );
+            self.render_extra(id, &block, image);
         }
     }
 }

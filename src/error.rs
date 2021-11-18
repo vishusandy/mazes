@@ -20,3 +20,16 @@ impl OutOfBoundsCoordError {
 #[derive(Error, Debug)]
 #[error("Could not save image {0}")]
 pub struct ImageSaveError<'p>(&'p std::path::PathBuf);
+
+#[derive(Error, Debug)]
+#[error("Error linking {a} and {b}: {reason}")]
+pub struct CellLinkError<'s> {
+    a: Index,
+    b: Index,
+    reason: &'s str,
+}
+impl<'s> CellLinkError<'s> {
+    pub(in crate) fn new(a: Index, b: Index, reason: &'s str) -> Self {
+        Self { a, b, reason }
+    }
+}

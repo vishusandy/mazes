@@ -27,16 +27,19 @@ impl Cell for SqCell {
     fn neighbor_ids(&self) -> &[Index] {
         &self.neighbors
     }
-    fn link<T: Grid>(&mut self, with: Index, grid: &T) -> Result<(), OutOfBoundsError> {
-        match grid.try_lookup(with) {
-            Ok(neighbor) => {
-                self.links().borrow_mut().push(neighbor.id());
-                neighbor.links().borrow_mut().push(self.id());
-                Ok(())
-            }
-            Err(err) => Err(err),
-        }
+    fn unchecked_link(&self, with: Index) {
+        self.links.borrow_mut().push(with);
     }
+    // fn link<T: Grid>(&self, with: Index, grid: &T) -> Result<(), OutOfBoundsError> {
+    //     match grid.try_lookup(with) {
+    //         Ok(neighbor) => {
+    //             self.links().borrow_mut().push(neighbor.id());
+    //             neighbor.links().borrow_mut().push(self.id());
+    //             Ok(())
+    //         }
+    //         Err(err) => Err(err),
+    //     }
+    // }
     fn links(&self) -> &RefCell<Vec<Index>> {
         &self.links
     }

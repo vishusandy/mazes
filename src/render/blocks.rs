@@ -2,8 +2,9 @@
 use crate::maze::{CoordLookup, Grid};
 use crate::render::{BasicOpts, Renderable};
 use crate::util::{Cardinal, Horizontal, Index, Ordinal, Vertical};
-use image::RgbaImage;
-use imageproc::drawing::draw_line_segment_mut;
+use image::{Rgba, RgbaImage};
+use imageproc::drawing::{draw_antialiased_line_segment_mut, draw_line_segment_mut};
+use imageproc::pixelops::interpolate;
 use parse_display::Display;
 
 pub trait BlockCoords {
@@ -209,7 +210,7 @@ impl UnsignedIntBlock {
             ((self.y1 + opts.block_size() / 2) as i32 + offset) as u32,
         )
     }
-    pub(in crate) fn draw_line(
+    pub(in crate) fn draw_edge(
         &self,
         d: &Cardinal,
         offset: i32,
@@ -254,6 +255,34 @@ impl SignedIntBlock {
     pub(in crate) fn center(&self) -> (i32, i32) {
         (self.center_x(), self.center_y())
     }
+    fn left_edge(&self) -> i32 {
+        self.x1
+    }
+    fn right_edge(&self) -> i32 {
+        self.x2
+    }
+    fn top_edge(&self) -> i32 {
+        self.y1
+    }
+    fn bottom_edge(&self) -> i32 {
+        self.y2
+    }
+    pub fn draw_cardinal_line_to_center(
+        &self,
+        dir: &Cardinal,
+        offset: i32,
+        color: Rgba<u8>,
+        image: &mut RgbaImage,
+    ) {
+        let (cx, cy) = self.center();
+        let pt: (i32, i32) = match dir {
+            Cardinal::N => (cx, self.top_edge() + offset),
+            Cardinal::E => (self.right_edge() - offset, cy),
+            Cardinal::S => (cx, self.bottom_edge() - offset),
+            Cardinal::W => (self.left_edge() + offset, cy),
+        };
+        draw_antialiased_line_segment_mut(image, (cx, cy), pt, color, interpolate);
+    }
 }
 
 impl From<&UnsignedIntBlock> for FloatBlock {
@@ -263,6 +292,16 @@ impl From<&UnsignedIntBlock> for FloatBlock {
             y1: from.y1 as f32,
             x2: from.x2 as f32,
             y2: from.y2 as f32,
+        }
+    }
+}
+impl From<&UnsignedIntBlock> for SignedIntBlock {
+    fn from(from: &UnsignedIntBlock) -> Self {
+        SignedIntBlock {
+            x1: from.x1 as i32,
+            y1: from.y1 as i32,
+            x2: from.x2 as i32,
+            y2: from.y2 as i32,
         }
     }
 }

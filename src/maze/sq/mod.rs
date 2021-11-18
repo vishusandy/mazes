@@ -43,6 +43,17 @@ impl SqGrid {
         grid
     }
 }
+impl std::ops::Index<usize> for SqGrid {
+    type Output = SqCell;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.cells[index]
+    }
+}
+impl std::ops::IndexMut<usize> for SqGrid {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.cells[index]
+    }
+}
 impl CardinalGrid for SqGrid {
     fn row_size(&self) -> RowSize {
         self.size
@@ -187,12 +198,12 @@ impl Renderable for SqGrid {
                     block.y1 -= border;
                     block.x1 -= border;
                     for i in 0..(border as i32) {
-                        block.draw_line(&d, i, image, opts)
+                        block.draw_edge(&d, i, image, opts)
                     }
                 }
                 if self.has_boundary(id, d) {
                     for i in 0 - (border as i32)..0 {
-                        block.draw_line(&d, i, image, opts)
+                        block.draw_edge(&d, i, image, opts)
                     }
                 }
                 continue;
@@ -200,12 +211,12 @@ impl Renderable for SqGrid {
             if let Some(n) = self.neighbor(id, &d) {
                 if !cell.links().borrow().contains(&n) {
                     for i in 0..border {
-                        block.draw_line(&d, i as i32, image, opts);
+                        block.draw_edge(&d, i as i32, image, opts);
                     }
                 }
             } else if self.has_boundary(id, d) {
                 for i in 0..border {
-                    block.draw_line(&d, i as i32, image, opts);
+                    block.draw_edge(&d, i as i32, image, opts);
                 }
             } else {
             }
@@ -219,7 +230,11 @@ impl Renderable for SqGrid {
         image: &mut RgbaImage,
         opts: &BasicOpts,
     ) {
-        let size = opts.block_size();
+        let size = if opts.fill_empty_passages() {
+            opts.block_size() + opts.border_width()
+        } else {
+            opts.block_size()
+        };
         draw_filled_rect_mut(
             image,
             Rect::at(block.x1 as i32, block.y1 as i32).of_size(size, size),
@@ -263,10 +278,35 @@ impl Renderable for SqGrid {
 }
 
 #[cfg(test)]
-mod tests {
+pub(in crate) mod tests {
     use super::*;
-    use crate::render::Renderer;
+    use crate::maze::sq::SqGrid;
+    use crate::maze::Grid;
+    use crate::render::{Renderable, Renderer, RendererOps};
     use std::path::Path;
+    pub(in crate) fn new_maze(size: usize) -> SqGrid {
+        let grid = SqGrid::new(size);
+        let last = size - 1;
+        for row in 0..size {
+            for col in 0..size {
+                let id = row * size + col;
+                match col {
+                    0 if row % 2 == 1 && row != last => {
+                        grid.link(id.into(), (id + size).into()).unwrap();
+                        grid.link(id.into(), (id + 1).into()).unwrap();
+                    }
+                    c if c == last && row % 2 == 0 && row != last => {
+                        grid.link(id.into(), (id + size).into()).unwrap();
+                    }
+                    _ if col != last => {
+                        grid.link(id.into(), (id + 1).into()).unwrap();
+                    }
+                    _ => {}
+                }
+            }
+        }
+        grid
+    }
     #[test]
     fn render_sq_grid_defaults() -> Result<(), image::ImageError> {
         let grid = SqGrid::new(6);
@@ -290,6 +330,5 @@ mod tests {
             panic!("Render failed - image '{}' was not created", file);
         }
         Ok(())
-        // panic!();
     }
 }

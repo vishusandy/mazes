@@ -2,8 +2,10 @@ pub mod sq;
 
 use crate::error::*;
 use crate::iter::*;
+use crate::render::{Renderer, RendererOps};
 use crate::trans::major::{Major, RowMajor};
 use crate::trans::*;
+use crate::util::dist::Distances;
 use crate::util::*;
 use std::cell::RefCell;
 
@@ -19,6 +21,17 @@ pub trait Grid: GridProps {
         } else {
             Err(OutOfBoundsError::new(id))
         }
+    }
+    fn link(&self, a: Index, b: Index) -> Result<(), CellLinkError> {
+        let cell_a = self
+            .get(a)
+            .ok_or_else(|| CellLinkError::new(a, b, "`a` could not be retrieved"))?;
+        let cell_b = self
+            .get(b)
+            .ok_or_else(|| CellLinkError::new(a, b, "`a` could not be retrieved"))?;
+        cell_a.unchecked_link(b);
+        cell_b.unchecked_link(a);
+        Ok(())
     }
     /// Produces an [`Iter`] to iterate the grid using the [`Ident`] transform, which does
     /// not change iteration order while still allowing [`Iter`] to be generic over `T: Transform`.
@@ -62,6 +75,31 @@ pub trait Grid: GridProps {
             None
         }
     }
+    ///
+    fn distances(&self, start: Index) -> Distances<'_, Self>
+    where
+        Self: Sized,
+    {
+        let mut dist = Distances::new(self, start);
+        let mut frontier = vec![start];
+        while !frontier.is_empty() {
+            let mut new_frontier: Vec<Index> = Vec::new();
+            for cell in frontier.iter().filter_map(|id| self.get(*id)) {
+                for link in cell.links().borrow().iter() {
+                    if !dist.has_entry(link) {
+                        let d = dist[cell.id()];
+                        dist.set(*link, d + 1);
+                        new_frontier.push(*link);
+                    }
+                }
+            }
+            frontier = new_frontier;
+        }
+        dist
+    }
+    // fn shortest_path(&self, start: Index, end: Index) -> Path<'_, Self> where Self: Sized {
+    //
+    // }
 }
 
 /// Methods that rely on having access to the struct's fields.
@@ -82,7 +120,8 @@ pub trait Cell {
     /// List cells that are near the current cell, without regards to whether they are linked.
     fn neighbor_ids(&self) -> &[Index];
     /// Link a cell with another cell
-    fn link<T: Grid>(&mut self, with: Index, grid: &T) -> Result<(), OutOfBoundsError>;
+    // fn link<T: Grid>(&self, with: Index, grid: &T) -> Result<(), OutOfBoundsError>;
+    fn unchecked_link(&self, with: Index);
     // Return ids of neighboring cells linked with the current cell.
     fn links(&self) -> &RefCell<Vec<Index>>;
     fn has_neighbor(&self, neighbor: Index) -> bool {
@@ -175,20 +214,20 @@ pub trait CardinalGrid: Grid {
     fn has_boundary_west(&self, id: Index) -> bool {
         id.rem(self.row_size()) == 0
     }
+    fn find_boundary(&self, id: Index) -> Option<Cardinal> {
+        Cardinal::iter().find(|d| self.has_boundary(id, *d))
+    }
+    fn dir_from(&self, from: Index, to: Index) -> Option<Cardinal> {
+        for d in Cardinal::iter() {
+            if matches!(self.neighbor(from, &d), Some(n) if n == to) {
+                return Some(d);
+            }
+        }
+        None
+        // Cardinal::iter().find(|d| self.neighbor(from, d).is_some())
+    }
     fn neighbor(&self, id: Index, d: &Cardinal) -> Option<Index> {
         self.calc_dir(id, d)
-        // if let Some(n) = self.calc_dir(id, d) {
-        //     self.get(n).map(|c| c.id()).copied()
-        // } else {
-        //     None
-        // }
-        // self.calc_dir(id, d)
-        //     .map(|n| {
-        //         self.get(n)
-        //             .map(|c| if c.has_neighbor(n) { Some(n) } else { None })
-        //             .flatten()
-        //     })
-        //     .flatten()
     }
     fn calc_dir(&self, id: Index, dir: &Cardinal) -> Option<Index> {
         match dir {
