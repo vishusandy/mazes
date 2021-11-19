@@ -160,7 +160,7 @@ impl<'f> BasicOpts<'f> {
             show_joints: true,
             joint_size: 10,
             block_size: 70,
-            fill_empty_passages: false,
+            fill_empty_passages: true,
             text_labels: true,
             center_labels: true,
             label_offset: 0,

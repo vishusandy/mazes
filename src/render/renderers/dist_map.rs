@@ -227,14 +227,14 @@ mod tests {
         new_maze(5).render_defaults().save_render(path)
     }
     #[test]
-    fn dist_map_renderer_defaults() -> Result<(), image::ImageError> {
+    fn render_dist_defaults() -> Result<(), image::ImageError> {
         new_maze(5)
             .distances(Index::zero())
             .render_defaults()
             .save_render(std::path::Path::new("sq_distances.png"))
     }
     #[test]
-    fn dist_renderer() -> Result<(), image::ImageError> {
+    fn render_dist_options() -> Result<(), image::ImageError> {
         let basic = BasicOpts::default();
         let mut mask = DistMask::only_blue();
         mask.set_alpha(127);

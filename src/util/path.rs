@@ -49,6 +49,9 @@ impl<'g, G: Grid> Path<'g, G> {
     pub fn get(&self, step: usize) -> Option<Index> {
         self.path.get(step).copied()
     }
+    pub fn contains(&self, id: Index) -> bool {
+        self.path.contains(&id)
+    }
     pub fn get_ref(&self) -> &[Index] {
         &self.path
     }

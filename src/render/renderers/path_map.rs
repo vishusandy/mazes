@@ -62,42 +62,44 @@ impl<'f, 'g, 'p> RendererOps<'f> for PathMapRenderer<'f, 'g, 'p, SqGrid> {
     }
     fn block_label(&self, id: Index) -> String {
         self.path
-            .get(*id)
-            .map(|d| match self.path_opts.show_distance {
-                true => d.to_string(),
+            .position(id)
+            .map(|step| match self.path_opts.show_distance {
+                true => step.to_string(),
                 false => id.to_string(),
             })
-            .unwrap_or_else(|| match self.path_opts.show_outside_labels {
+            .unwrap_or_else(|| match self.path_opts.show_outside_labels() {
                 true => id.to_string(),
                 false => String::new(),
             })
     }
     fn render_extra(&self, id: Index, block: &<Self::G as Renderable>::B, image: &mut RgbaImage) {
-        let block: SignedIntBlock = block.into();
-        if let Some(d) = self.path.prev_dir(id) {
-            block.draw_cardinal_line_to_center(
-                &d,
-                self.path_opts.pad_start(),
-                self.path_opts.arrow_color(),
-                &self.basic_opts,
-                image,
-            );
-        }
-        if let Some(d) = self.path.next_dir(id) {
-            block.draw_cardinal_line_to_center(
-                &d,
-                self.path_opts.pad_end(),
-                self.path_opts.arrow_color(),
-                &self.basic_opts,
-                image,
-            );
-            block.draw_cardinal_arrow_tip(
-                &d,
-                self.path_opts.arrow_color(),
-                &self.basic_opts,
-                &self.path_opts,
-                image,
-            )
+        if self.path.position(id).is_some() {
+            let block: SignedIntBlock = block.into();
+            if let Some(d) = self.path.prev_dir(id) {
+                block.draw_cardinal_line_to_center(
+                    &d,
+                    self.path_opts.pad_start(),
+                    self.path_opts.arrow_color(),
+                    &self.basic_opts,
+                    image,
+                );
+            }
+            if let Some(d) = self.path.next_dir(id) {
+                block.draw_cardinal_line_to_center(
+                    &d,
+                    self.path_opts.pad_end(),
+                    self.path_opts.arrow_color(),
+                    &self.basic_opts,
+                    image,
+                );
+                block.draw_cardinal_arrow_tip(
+                    &d,
+                    self.path_opts.arrow_color(),
+                    &self.basic_opts,
+                    &self.path_opts,
+                    image,
+                )
+            }
         }
     }
 }
@@ -229,16 +231,39 @@ impl Default for PathMapBg {
 
 #[cfg(test)]
 mod tests {
+    use super::PathMapOpts;
     use crate::maze::sq::tests::new_maze;
-    use crate::maze::Grid;
+    use crate::maze::sq::SqGrid;
+    use crate::maze::{CardinalGrid, Grid};
+    use crate::render::BasicOpts;
     use crate::render::Renderer;
     use crate::util::Index;
+    use rand::SeedableRng;
+    use rand_xoshiro::SplitMix64;
     #[test]
-    fn path_map_renderer_defaults() -> Result<(), image::ImageError> {
+    fn render_shortest_path() -> Result<(), image::ImageError> {
         new_maze(5)
             .distances(Index::zero())
             .shortest_path(24.into())
             .render_defaults()
             .save_render(std::path::Path::new("shortest_path.png"))
+    }
+    #[test]
+    fn longest_path() -> Result<(), image::ImageError> {
+        let mut rng = SplitMix64::seed_from_u64(758);
+        let grid = SqGrid::sidewinder(8, &mut rng);
+        let path = grid.longest_path(24.into());
+        path.render_defaults()
+            .save_render(std::path::Path::new("longest_path.png"))
+    }
+    #[test]
+    fn longest_path_options() -> Result<(), image::ImageError> {
+        let mut rng = SplitMix64::seed_from_u64(758);
+        let grid = SqGrid::sidewinder(8, &mut rng);
+        let path = grid.longest_path(24.into());
+        let basic = BasicOpts::debug();
+        let path_opts = PathMapOpts::default();
+        path.render_options(Some(basic), Some(path_opts))
+            .save_render(std::path::Path::new("longest_path_opts.png"))
     }
 }

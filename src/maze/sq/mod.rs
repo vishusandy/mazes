@@ -233,16 +233,15 @@ impl Renderable for SqGrid {
         image: &mut RgbaImage,
         opts: &BasicOpts,
     ) {
-        let size = if opts.fill_empty_passages() {
-            opts.block_size() + opts.border_width()
+        let x: u32 = block.x1;
+        let y: u32 = block.y1;
+        let border = opts.border_width();
+        let s = if opts.fill_empty_passages() {
+            opts.block_size() + border
         } else {
             opts.block_size()
         };
-        draw_filled_rect_mut(
-            image,
-            Rect::at(block.x1 as i32, block.y1 as i32).of_size(size, size),
-            *color,
-        )
+        draw_filled_rect_mut(image, Rect::at(x as i32, y as i32).of_size(s, s), *color)
     }
     fn draw_block_text(
         &self,
@@ -311,7 +310,7 @@ pub(in crate) mod tests {
         grid
     }
     #[test]
-    fn render_sq_grid_defaults() -> Result<(), image::ImageError> {
+    fn render_square_defaults() -> Result<(), image::ImageError> {
         let grid = SqGrid::new(6);
         let file = "grid.png";
         let path = Path::new(file);
@@ -322,12 +321,14 @@ pub(in crate) mod tests {
         Ok(())
     }
     #[test]
-    fn render_sq_grid_options() -> Result<(), image::ImageError> {
-        let grid = SqGrid::new(6);
+    fn render_square_options() -> Result<(), image::ImageError> {
+        // let grid = SqGrid::new(6);
+        let grid = new_maze(4);
         let file = "grid_opts.png";
         let path = Path::new(file);
         let mut options = BasicOpts::debug();
         options.set_center_labels(false);
+        options.set_fill_empty_passages(true);
         grid.render_options(&options).save_render(path)?;
         if !path.exists() {
             panic!("Render failed - image '{}' was not created", file);

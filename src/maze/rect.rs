@@ -228,8 +228,7 @@ pub trait CardinalGrid: Grid {
 mod tests {
     use super::*;
     use crate::maze::sq::SqGrid;
-    use crate::maze::Grid;
-    use crate::render::{Renderer, RendererOps};
+    use crate::render::Renderer;
     use rand::SeedableRng;
     use rand_xoshiro::SplitMix64;
     #[test]

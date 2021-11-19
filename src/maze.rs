@@ -115,6 +115,16 @@ pub trait Grid: GridProps {
     {
         self.distances(start).shortest_path(end)
     }
+    fn longest_path(&self, start: Index) -> Path<'_, Self>
+    where
+        Self: Sized,
+    {
+        let dist = self.distances(start);
+        let (max, _) = dist.max_dist();
+        let dist2 = self.distances(max);
+        let (end, _) = dist2.max_dist();
+        dist2.shortest_path(end)
+    }
 }
 
 /// Methods that rely on having access to the struct's fields.
@@ -155,3 +165,6 @@ pub trait CoordLookup: Grid {
     fn get_coords(&self, id: Index) -> Coord;
     fn try_get_coords(&self, id: Index) -> Result<Coord, OutOfBoundsError>;
 }
+
+#[cfg(test)]
+mod test {}

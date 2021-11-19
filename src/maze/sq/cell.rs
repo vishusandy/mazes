@@ -33,7 +33,8 @@ impl Cell for SqCell {
         &self.links
     }
     fn unchecked_unlink(&self, with: Index) {
-        let pos = self.links.borrow().iter().position(|n| *n == with);
-        // self.links.borrow_mut().remove()
+        if let Some(pos) = self.links.borrow().iter().position(|n| *n == with) {
+            self.links.borrow_mut().remove(pos);
+        }
     }
 }
