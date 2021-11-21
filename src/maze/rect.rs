@@ -172,7 +172,7 @@ pub trait CardinalGrid: Grid {
         }
         .into()
     }
-    fn binary_tree<R: Rng>(size: usize, rng: &mut R) -> Self
+    fn binary_tree<R: Rng + ?Sized>(size: usize, rng: &mut R) -> Self
     where
         Self: Sized,
     {
@@ -200,7 +200,7 @@ pub trait CardinalGrid: Grid {
         }
         grid
     }
-    fn sidewinder<R: Rng>(size: usize, rng: &mut R) -> Self
+    fn sidewinder<R: Rng + ?Sized>(size: usize, rng: &mut R) -> Self
     where
         Self: Sized,
     {

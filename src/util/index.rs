@@ -2,10 +2,10 @@ use crate::util::{Capacity, Numerical, RowSize, Visit};
 use parse_display::Display;
 use std::cmp::Ordering;
 use std::ops::{
-    Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Sub, SubAssign,
+    Add, AddAssign, Deref, Div, DivAssign, Mul, MulAssign, Range, Rem, RemAssign, Sub, SubAssign,
 };
 
-#[derive(Clone, Copy, Debug, Display, Hash, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, Display, Hash, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Index(pub(in crate::util) usize);
 //  todo: impl Add/Sub/Mul/Div/AddAssign/SubAssign/MulAssign/DivAssign/Deref/Rem  Neg/Not??  From<Cell> - calls self.id
 impl Index {
@@ -57,6 +57,12 @@ impl Index {
     #[allow(clippy::should_implement_trait)]
     pub fn cmp<T: Numerical>(&self, rhs: T) -> Ordering {
         self.0.cmp(&rhs.num())
+    }
+    pub fn to<R: Into<Index>>(self, to: R) -> Range<Index> {
+        Range {
+            start: self,
+            end: to.into(),
+        }
     }
 }
 impl Numerical for Index {
@@ -164,4 +170,49 @@ impl From<Index> for i32 {
     fn from(from: Index) -> Self {
         from.0 as i32
     }
+}
+
+pub struct InRange<R: Into<Index>>(pub Range<R>);
+impl<R: Into<Index>> InRange<R> {
+    pub fn into_range(self) -> Range<usize> {
+        Range::from(self)
+    }
+}
+impl<R: Into<Index>> From<InRange<R>> for Range<usize> {
+    fn from(range: InRange<R>) -> Self {
+        Self {
+            start: *range.0.start.into(),
+            end: *range.0.end.into(),
+        }
+    }
+}
+
+use rand::distributions::uniform::{SampleBorrow, SampleUniform, UniformInt, UniformSampler};
+use rand::prelude::*;
+#[derive(Clone, Copy, Debug)]
+pub struct UniformIndex(UniformInt<usize>);
+
+impl UniformSampler for UniformIndex {
+    type X = Index;
+    fn new<B1, B2>(low: B1, high: B2) -> Self
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        UniformIndex(UniformInt::<usize>::new(low.borrow().0, high.borrow().0))
+    }
+    fn new_inclusive<B1, B2>(low: B1, high: B2) -> Self
+    where
+        B1: SampleBorrow<Self::X> + Sized,
+        B2: SampleBorrow<Self::X> + Sized,
+    {
+        UniformSampler::new(low, high)
+    }
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Self::X {
+        Index(self.0.sample(rng))
+    }
+}
+
+impl SampleUniform for Index {
+    type Sampler = UniformIndex;
 }

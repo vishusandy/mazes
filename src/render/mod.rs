@@ -10,8 +10,12 @@ use imageproc::drawing::draw_filled_rect_mut;
 use imageproc::rect::Rect;
 const DEJAVU_BYTES: &[u8] = include_bytes!("../../assets/DejaVuSansMono.ttf");
 
+/// `Renderer` enables different types of images to be generated using the same grid data.
+/// For example, a [`SqGrid`] can be saved as a distance map, a path through the grid, or a normal
+/// grid image.  All of those are examples of types implementing [`Renderer`].
+///
 /// A `Renderer` is a type that can render a grid image and is composed of at least a [`BasicOpts`]
-/// and a type implementing [`Grid`]; these are necessary for rendering.  The type will also need
+/// and a type implementing [`Grid`].  The type will also need
 /// to implement /// [`RendererOps`].  `Renderer` contains the methods that users should have
 /// access to /// (e.g., `save_render()`) while [`RendererOps`] contains methods necessary for
 /// rendering.  A type implementing `Renderer` must contain (or have access to) an instance of
@@ -71,6 +75,9 @@ pub struct Block {
 }
 
 /// Abstraction for the rendering of an individual block using a given grid type.
+///
+/// These methods will be implemented on a [`Grid`] type and enable [`Renderer`]s to work work with
+/// grids in a generic way.
 pub trait Renderable: Grid {
     type B: BlockCoords;
     fn render_block(

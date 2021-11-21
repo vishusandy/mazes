@@ -95,11 +95,3 @@ impl<'g, G: Grid> std::ops::IndexMut<Index> for Distances<'g, G> {
         self.map.entry(index).or_insert(0)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    // use crate::maze::sq::tests::new_maze;
-    // use crate::maze::Grid;
-    // use crate::render::Renderer;
-    // use crate::util::Index;
-}

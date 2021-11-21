@@ -8,7 +8,13 @@ use crate::trans::*;
 use crate::util::dist::Distances;
 use crate::util::path::Path;
 use crate::util::*;
+use linked_hash_set::LinkedHashSet;
+use log::trace;
+use rand::seq::IteratorRandom;
+use rand::Rng;
 use std::cell::RefCell;
+use std::collections::HashSet;
+// use index_list::IndexList
 
 /// Trait to access fields of the implementing type.  These methods were separated from [`Grid`]
 /// to allow more generic use cases.
@@ -87,7 +93,23 @@ pub trait Grid: GridProps {
             None
         }
     }
-    ///
+    fn get_unchecked(&self, id: Index) -> &<Self as GridProps>::C {
+        self.lookup(id)
+    }
+    fn random<R: Rng + ?Sized>(&self, rng: &mut R) -> &<Self as GridProps>::C {
+        self.lookup(self.random_id(rng))
+    }
+    fn random_id<R: Rng + ?Sized>(&self, rng: &mut R) -> Index {
+        rng.gen_range(Index::zero().to(self.capacity()))
+    }
+    fn random_neighbor_id<R: Rng + ?Sized>(&self, id: Index, rng: &mut R) -> Index {
+        use rand::seq::SliceRandom;
+        *self.lookup(id).neighbor_ids().choose(rng).unwrap()
+    }
+    fn random_neighbor<R: Rng + ?Sized>(&self, id: Index, rng: &mut R) -> &<Self as GridProps>::C {
+        self.lookup(self.random_neighbor_id(id, rng))
+    }
+    /// Flood fill to find out how far each block is away from a starting point.
     fn distances(&self, start: Index) -> Distances<'_, Self>
     where
         Self: Sized,
@@ -125,11 +147,108 @@ pub trait Grid: GridProps {
         let (end, _) = dist2.max_dist();
         dist2.shortest_path(end)
     }
+    /// Implementation of the Aldous-Broder algorithm.  It uses a random walk to link unvisited
+    /// cells to neighbors.
+    ///
+    /// See also: [Aldous-Broder Algorithm][aldous-broder]
+    ///
+    /// [aldous-broder]: https://en.wikipedia.org/wiki/Maze_generation_algorithm#Aldous-Broder_algorithm
+    fn aldous_broder<R: Rng + ?Sized>(size: usize, rng: &mut R) -> Self
+    where
+        Self: Sized,
+    {
+        let grid = Self::setup(size);
+        let mut cell = grid.random_id(rng);
+        let mut unvisited = grid.capacity().minus(1usize);
+        while unvisited > 0 {
+            let neighbor = grid.random_neighbor(cell, rng);
+            if neighbor.not_linked() {
+                grid.link(cell, neighbor.id()).unwrap();
+                unvisited -= 1;
+            }
+            cell = neighbor.id();
+        }
+        grid
+    }
+    /// An implementation of [Wilson's Algorithm][wilsons].  It uses a loop-erased walk.
+    ///
+    /// See also: [Wilson's Algorithm][wilsons]
+    ///
+    /// [wilsons]: https://en.wikipedia.org/wiki/Maze_generation_algorithm#Wilson's_algorithm
+    fn wilsons<R: Rng + ?Sized>(size: usize, rng: &mut R) -> Self
+    where
+        Self: Sized,
+    {
+        let grid = Self::setup(size);
+        let mut unvisited: LinkedHashSet<Index> = (0..*grid.capacity()).map(Index::from).collect();
+        let first = *unvisited
+            .iter()
+            .nth(rng.gen_range(0..unvisited.len()))
+            .unwrap();
+        unvisited.remove(&first);
+        while !unvisited.is_empty() {
+            let mut cell = *unvisited
+                .iter()
+                .nth(rng.gen_range(0..unvisited.len()))
+                .unwrap();
+            let mut path = vec![cell];
+            while unvisited.contains(&cell) {
+                cell = grid.random_neighbor_id(cell, rng);
+                if let Some(pos) = path.iter().position(|i| *i == cell) {
+                    path.truncate(pos + 1);
+                } else {
+                    path.push(cell);
+                }
+            }
+            for i in 0..path.len() - 1 {
+                let a = path[i];
+                grid.link(a, path[i + 1]).unwrap();
+                unvisited.remove(&a);
+            }
+        }
+        grid
+    }
+    fn animated_wilsons<R: Rng + ?Sized>(size: usize, rng: &mut R) -> Self
+    where
+        Self: Sized,
+    {
+        let grid = Self::setup(size);
+        let mut unvisited: LinkedHashSet<Index> = (0..*grid.capacity()).map(Index::from).collect();
+        let first = *unvisited
+            .iter()
+            .nth(rng.gen_range(0..unvisited.len()))
+            .unwrap();
+        unvisited.remove(&first);
+        while !unvisited.is_empty() {
+            let mut cell = *unvisited
+                .iter()
+                .nth(rng.gen_range(0..unvisited.len()))
+                .unwrap();
+            let mut path = vec![cell];
+            while unvisited.contains(&cell) {
+                cell = grid.random_neighbor_id(cell, rng);
+                if let Some(pos) = path.iter().position(|i| *i == cell) {
+                    path.truncate(pos + 1);
+                } else {
+                    path.push(cell);
+                }
+            }
+            for i in 0..path.len() - 1 {
+                let a = path[i];
+                grid.link(a, path[i + 1]).unwrap();
+                unvisited.remove(&a);
+            }
+        }
+        grid
+    }
 }
 
-/// Methods that rely on having access to the struct's fields.
-/// The `Grid` trait provides additional methods but is intended
-/// to be used generically and thus cannot access its data.
+/// Helper methods that make the [`Grid`] trait actually work.
+///
+/// This is separate from [`Grid`] to allow more granular control over which methods are visible
+/// by default.
+///
+/// Types implementing the [`Grid`] trait must also implememnt [`GridProps`].
 pub trait GridProps {
     type C: Cell;
     fn setup(size: usize) -> Self;
@@ -145,7 +264,6 @@ pub trait Cell {
     /// List cells that are near the current cell, without regards to whether they are linked.
     fn neighbor_ids(&self) -> &[Index];
     /// Link a cell with another cell
-    // fn link<T: Grid>(&self, with: Index, grid: &T) -> Result<(), OutOfBoundsError>;
     fn unchecked_link(&self, with: Index);
     // Return ids of neighboring cells linked with the current cell.
     fn links(&self) -> &RefCell<Vec<Index>>;
@@ -156,6 +274,12 @@ pub trait Cell {
         self.neighbor_ids().contains(&neighbor)
     }
     fn unchecked_unlink(&self, with: Index);
+    fn is_linked(&self) -> bool {
+        !self.links().borrow().is_empty()
+    }
+    fn not_linked(&self) -> bool {
+        self.links().borrow().is_empty()
+    }
 }
 
 /// Any `Grid` type implementing `CoordLookup` can use `Coord` to lookup a cell's `Index`
@@ -167,4 +291,28 @@ pub trait CoordLookup: Grid {
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use crate::maze::sq::tests::new_maze;
+    use crate::maze::sq::SqGrid;
+    use crate::maze::{CardinalGrid, Grid};
+    use crate::render::BasicOpts;
+    use crate::render::Renderer;
+    use crate::util::Index;
+    use rand::SeedableRng;
+    use rand_xoshiro::SplitMix64;
+
+    #[test]
+    fn aldous_broder() -> Result<(), image::ImageError> {
+        let mut rng = SplitMix64::seed_from_u64(852);
+        let grid = SqGrid::aldous_broder(6, &mut rng);
+        grid.render_defaults()
+            .save_render(std::path::Path::new("aldous_broder.png"))
+    }
+    #[test]
+    fn wilsons() -> Result<(), image::ImageError> {
+        let mut rng = SplitMix64::seed_from_u64(852);
+        let grid = SqGrid::wilsons(7, &mut rng);
+        grid.render_defaults()
+            .save_render(std::path::Path::new("wilsons.png"))
+    }
+}
