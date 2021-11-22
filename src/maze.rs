@@ -9,12 +9,8 @@ use crate::util::dist::Distances;
 use crate::util::path::Path;
 use crate::util::*;
 use linked_hash_set::LinkedHashSet;
-use log::trace;
-use rand::seq::IteratorRandom;
 use rand::Rng;
 use std::cell::RefCell;
-use std::collections::HashSet;
-// use index_list::IndexList
 
 /// Trait to access fields of the implementing type.  These methods were separated from [`Grid`]
 /// to allow more generic use cases.
@@ -208,39 +204,6 @@ pub trait Grid: GridProps {
         }
         grid
     }
-    fn animated_wilsons<R: Rng + ?Sized>(size: usize, rng: &mut R) -> Self
-    where
-        Self: Sized,
-    {
-        let grid = Self::setup(size);
-        let mut unvisited: LinkedHashSet<Index> = (0..*grid.capacity()).map(Index::from).collect();
-        let first = *unvisited
-            .iter()
-            .nth(rng.gen_range(0..unvisited.len()))
-            .unwrap();
-        unvisited.remove(&first);
-        while !unvisited.is_empty() {
-            let mut cell = *unvisited
-                .iter()
-                .nth(rng.gen_range(0..unvisited.len()))
-                .unwrap();
-            let mut path = vec![cell];
-            while unvisited.contains(&cell) {
-                cell = grid.random_neighbor_id(cell, rng);
-                if let Some(pos) = path.iter().position(|i| *i == cell) {
-                    path.truncate(pos + 1);
-                } else {
-                    path.push(cell);
-                }
-            }
-            for i in 0..path.len() - 1 {
-                let a = path[i];
-                grid.link(a, path[i + 1]).unwrap();
-                unvisited.remove(&a);
-            }
-        }
-        grid
-    }
 }
 
 /// Helper methods that make the [`Grid`] trait actually work.
@@ -292,12 +255,9 @@ pub trait CoordLookup: Grid {
 
 #[cfg(test)]
 mod test {
-    use crate::maze::sq::tests::new_maze;
     use crate::maze::sq::SqGrid;
-    use crate::maze::{CardinalGrid, Grid};
-    use crate::render::BasicOpts;
+    use crate::maze::Grid;
     use crate::render::Renderer;
-    use crate::util::Index;
     use rand::SeedableRng;
     use rand_xoshiro::SplitMix64;
 

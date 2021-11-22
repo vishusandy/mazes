@@ -42,7 +42,7 @@ pub trait Renderer<'f>: RendererOps<'f> {
     fn opts_mut<'a>(&'a mut self) -> &'a mut BasicOpts<'f> {
         self.options_mut()
     }
-    fn render_rgb(&self) -> RgbaImage {
+    fn render_rgba(&self) -> RgbaImage {
         let opts = self.options();
         let output = self.render_grid();
         if let Some(scale) = opts.scale_image() {
@@ -52,7 +52,7 @@ pub trait Renderer<'f>: RendererOps<'f> {
         }
     }
     fn save_render(&self, path: &std::path::Path) -> Result<(), image::ImageError> {
-        self.render_rgb().save(path)
+        self.render_rgba().save(path)
     }
 }
 //
@@ -132,6 +132,9 @@ pub trait RendererOps<'f> {
     fn options<'a>(&'a self) -> &'a BasicOpts<'f>;
     fn options_mut<'a>(&'a mut self) -> &'a mut BasicOpts<'f>;
     fn grid(&self) -> &Self::G;
+    fn dimensions(&self) -> (u32, u32) {
+        self.grid().image_dimensions(self.options())
+    }
     // fn block_coords(&self, id: Index) -> <<Self as RendererOps<'f>>::G as GridProps>::B;
     fn block_coords(&self, id: Index) -> <Self::G as Renderable>::B;
     fn block_label(&self, id: Index) -> String {
