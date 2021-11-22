@@ -1,11 +1,13 @@
 use crate::maze::{Grid, GridProps};
-use crate::render::{Renderable, Renderer};
+use crate::render::renderers::custom::{CustomFunc, CustomRenderer};
+use crate::render::{Renderable, Renderer, RendererOps};
 use crate::util::Index;
-use image::RgbaImage;
+use image::{Rgba, RgbaImage};
 use linked_hash_set::LinkedHashSet;
 use rand::Rng;
 use std::borrow::Cow;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -28,6 +30,7 @@ pub struct Animation<'a, 'f, R: Renderer<'f>> {
     anim: Cow<'a, AnimOpts>,
     /// how long to show each frame
     enc: RefCell<Encoder>,
+    frame: RefCell<usize>,
     counter: RefCell<i32>,
     phantom: std::marker::PhantomData<&'f R>,
 }
@@ -40,6 +43,7 @@ impl<'a, 'f, R: Renderer<'f>> Animation<'a, 'f, R> {
             ),
             renderer,
             counter: RefCell::from(0),
+            frame: RefCell::from(0),
             anim: opts.map(|a| Cow::Borrowed(a)).unwrap_or_else(Cow::default),
             phantom: std::marker::PhantomData,
         }
@@ -79,6 +83,8 @@ impl<'a, 'f, R: Renderer<'f>> Animation<'a, 'f, R> {
         f.write_all(&bytes).expect("Error writing to file");
         Ok(())
     }
+}
+impl<'a, 'f, R: Renderer<'f> + Clone> Animation<'a, 'f, R> {
     /// An implementation of [Wilson's Algorithm][wilsons].  It uses a loop-erased walk.
     ///
     /// See also: [Wilson's Algorithm][wilsons]
@@ -90,12 +96,17 @@ impl<'a, 'f, R: Renderer<'f>> Animation<'a, 'f, R> {
         rng: &mut Rand,
     ) -> Result<(), Error> {
         let grid = self.renderer.grid();
+        // let bg = HashMap<(Index, usize)>
         let mut unvisited: LinkedHashSet<Index> = (0..*grid.capacity()).map(Index::from).collect();
         self.add_rgba_frame(self.renderer.render_rgba(), self.anim.time())?;
         let first = *unvisited
             .iter()
             .nth(rng.gen_range(0..unvisited.len()))
             .unwrap();
+        let bgs = cust_bg_map(&[first], &[Rgba([0, 0, 255, 255])]);
+        let custom: CustomRenderer<'f, R, CustomFunc<R>> =
+            CustomRenderer::new(self.renderer.clone(), bgs, HashMap::new(), None);
+        self.add_rgba_frame(custom.render_rgba(), self.anim.time())?;
         unvisited.remove(&first);
         while !unvisited.is_empty() {
             let mut cell = *unvisited
@@ -113,6 +124,10 @@ impl<'a, 'f, R: Renderer<'f>> Animation<'a, 'f, R> {
             }
             for i in 0..path.len() - 1 {
                 let a = path[i];
+                // let bgs = cust_bg_map(&[first], &[Rgba([0, 0, 255, 255])]);
+                // let custom: CustomRenderer<'f, R, CustomFunc<R>> =
+                //     CustomRenderer::new(self.renderer.clone(), bgs, HashMap::new(), None);
+                // self.add_rgba_frame(custom.render_rgba(), self.anim.time())?;
                 grid.link(a, path[i + 1]).unwrap();
                 unvisited.remove(&a);
                 self.add_rgba_frame(self.renderer.render_rgba(), self.anim.time())?;
@@ -120,6 +135,14 @@ impl<'a, 'f, R: Renderer<'f>> Animation<'a, 'f, R> {
         }
         self.save(path)
     }
+}
+
+fn cust_bg_map(ids: &[Index], bgs: &[Rgba<u8>]) -> HashMap<Index, Rgba<u8>> {
+    let mut map: HashMap<Index, Rgba<u8>> = HashMap::new();
+    for (id, bg) in ids.iter().zip(bgs.iter()) {
+        map.insert(*id, *bg);
+    }
+    map
 }
 
 #[derive(Clone, Debug)]

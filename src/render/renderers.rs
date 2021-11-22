@@ -1,4 +1,5 @@
 pub mod anim;
+pub mod custom;
 pub mod dist_map;
 pub mod grid;
 pub mod path_map;

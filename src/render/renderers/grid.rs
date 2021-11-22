@@ -34,6 +34,7 @@ impl<'f, 'o, 'g> RenderGrid<'f, 'o, 'g, SqGrid> {
     pub fn animation_options<'a>(self, anim: &'a AnimOpts) -> Animation<'a, 'f, Self> {
         Animation::new(self, Some(anim))
     }
+    // pub fn customize(self, )
 }
 impl<'f, 'o, 'g> RendererOps<'f> for RenderGrid<'f, 'o, 'g, SqGrid> {
     type G = SqGrid;
